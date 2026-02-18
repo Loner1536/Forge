@@ -1,11 +1,6 @@
 # AppForge
 
-<p align="center">
-
-<strong>SOME OF THIS MIGHT BE OUTDATED!</strong>
-
-</p>
-
+**⚠️ SOME OF THIS MIGHT BE OUTDATED! ⚠️**
 
 > ⚠️ **Documentation Notice**  
 > Written with AI assistance. Please report any issues in [GitHub Issues](https://github.com/Loner1536/AppForge/issues) or on Discord: `@loner71x`.
