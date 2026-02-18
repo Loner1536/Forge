@@ -23,8 +23,6 @@ import getAppEntry from "./helpers/getAppEntry";
 type Destructor = () => void;
 
 export default class AppForge extends Renders {
-	private innerMount?: Destructor;
-
 	constructor() {
 		super();
 		AppRegistry.forEach((entryMap, name) => {
@@ -65,7 +63,10 @@ export default class AppForge extends Renders {
 				if (Vide.strict && count === 2) count = 0;
 				else if (!Vide.strict && count === 1) count = 0;
 			});
-		}
+		} else
+			warn(
+				".bind should ONLY be used for UI-Labs or something that displays UI WITHOUT the game running",
+			);
 	}
 
 	// TODO: make a separate files for rules
@@ -94,11 +95,17 @@ export default class AppForge extends Renders {
 		this.set(name, group, !src(), rules);
 	}
 
-	public story(
-		props: AppProps,
-		target: GuiObject,
-		config?: { render?: Types.Props.Render; minScale?: number },
-	) {
+	story = ({
+		props,
+		target,
+		renders,
+		config,
+	}: {
+		props: AppProps;
+		target: GuiObject;
+		renders?: Types.Props.Render;
+		config?: Types.Props.Config;
+	}) => {
 		const Container = create("Frame")({
 			Name: "Story Container",
 			BackgroundTransparency: 1,
@@ -108,35 +115,22 @@ export default class AppForge extends Renders {
 		});
 
 		apply(Container as Instance)({
-			[0]: this.initalize({
+			[0]: this.Initalize({
 				props,
 				forge: this,
-				renders: config?.render,
+				renders,
 				config: {
 					px: {
 						target,
-						minScale: config?.minScale,
+						minScale: config?.px.minScale,
 					},
 				},
 			}),
 		});
 
 		return Container;
-	}
-	public mount(
-		props: Omit<Types.Props.Main, "forge">,
-		target: Instance,
-		root?: GuiObject | Instance,
-	) {
-		this.initalize(
-			{
-				...props,
-				forge: this,
-			},
-			target,
-			root,
-		);
-
-		return this.innerMount;
-	}
+	};
+	render = ({ props }: { props: Omit<Types.Props.Main, "forge"> }) => {
+		return this.Initalize({ ...props, forge: this });
+	};
 }

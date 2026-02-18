@@ -1,5 +1,5 @@
 {
-	"name": "Learning-Project",
+	"name": "Roblox-TS-Docker",
 	"build": {
 		"dockerfile": "Dockerfile",
 		"context": ".."

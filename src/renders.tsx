@@ -1,3 +1,6 @@
+// Services
+import { Players, RunService } from "@rbxts/services";
+
 // Packages
 import Vide, { apply, mount } from "@rbxts/vide";
 
@@ -31,7 +34,7 @@ export default class Renders extends Rules {
 		super();
 	}
 
-	Load = (props: Types.Props.Main) => {
+	private Load(props: Types.Props.Main) {
 		const baseEntries = this.collectEntries(props.renders);
 		const toLoad = this.expandWithChildren(baseEntries);
 
@@ -50,7 +53,16 @@ export default class Renders extends Rules {
 		});
 
 		return load;
-	};
+	}
+	protected Initalize(props: Types.Props.Main) {
+		if (!this.__px) {
+			usePx(props.config?.px.target, props.config?.px.resolution, props.config?.px.minScale);
+
+			this.__px = true;
+		}
+
+		return this.Load(props);
+	}
 
 	private collectEntries(renders?: Types.Props.Render): Types.AppRegistry.Static[] {
 		const result: Types.AppRegistry.Static[] = [];
@@ -95,7 +107,6 @@ export default class Renders extends Rules {
 
 		return result;
 	}
-
 	private createInstance(props: Types.Props.Main, name: AppNames, group: AppGroups) {
 		const entry = getAppEntry(name, group);
 		if (!entry) return;
@@ -157,47 +168,5 @@ export default class Renders extends Rules {
 		this.Loaded.set(name, newMap);
 
 		return render;
-	}
-
-	protected initalize(
-		props: Types.Props.Main,
-		target?: GuiObject | Instance,
-		root?: GuiObject | Instance,
-	) {
-		if (target) {
-			mount(() => {
-				if (!this.__px) {
-					usePx(props.config?.px.target, props.config?.px.resolution, props.config?.px.minScale);
-
-					this.__px = true;
-				}
-
-				const renders = <this.Load {...props} />;
-
-				if (root) {
-					root.Name = "App Tree";
-
-					apply(root)({
-						[0]: renders,
-					});
-
-					return root;
-				}
-
-				return (
-					<screengui Name={"App Tree"} ZIndexBehavior="Sibling" ResetOnSpawn={false}>
-						{renders}
-					</screengui>
-				);
-			}, target);
-		} else {
-			if (!this.__px) {
-				usePx(props.config?.px.target, props.config?.px.resolution, props.config?.px.minScale);
-
-				this.__px = true;
-			}
-
-			return <this.Load {...props} />;
-		}
 	}
 }

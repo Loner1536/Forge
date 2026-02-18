@@ -19,14 +19,16 @@ declare namespace Types {
 		type Main = {
 			props: AppProps;
 			forge: AppForge;
-			config?: {
-				px: {
-					target?: GuiObject | Camera;
-					resolution?: Vector2;
-					minScale?: number;
-				};
-			};
+			config?: Config;
 			renders?: Render;
+		};
+
+		type Config = {
+			px: {
+				target?: GuiObject | Camera;
+				resolution?: Vector2;
+				minScale?: number;
+			};
 		};
 
 		type Class = AppProps & {

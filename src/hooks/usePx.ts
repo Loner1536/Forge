@@ -5,7 +5,7 @@ import { Workspace } from "@rbxts/services";
 import { source } from "@rbxts/vide";
 
 // Helpers
-import { useEventListener } from "./useEventListener";
+import useEventListener from "./useEventListener";
 
 /** Default reference resolution for px calculations */
 const BASE_RESOLUTION = source(new Vector2(1920, 1080));

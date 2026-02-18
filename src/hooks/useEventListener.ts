@@ -1,3 +1,4 @@
+// Packages
 import { cleanup } from "@rbxts/vide";
 
 type EventLike<T extends Callback = Callback> =
@@ -21,9 +22,9 @@ const connect = (event: EventLike, callback: Callback): ConnectionLike => {
 		return event.connect(callback);
 	} else if ("subscribe" in event) {
 		return event.subscribe(callback);
+	} else {
+		throw "Event-like object does not have a supported connect method.";
 	}
-
-	error("Event-like object does not have a supported connect method.", 2);
 };
 
 const disconnect = (connection: ConnectionLike) => {
@@ -34,14 +35,19 @@ const disconnect = (connection: ConnectionLike) => {
 	} else if ("disconnect" in connection) {
 		connection.disconnect();
 	} else {
-		warn("Unsupported connection-like object during cleanup", connection);
+		throw "Connection-like object does not have a supported disconnect method.";
 	}
 };
 
 /**
- * Subscribes to an event-like object and auto-cleans up.
+ * Subscribes to an event-like object. The subscription is automatically
+ * disconnected when the scope cleans up.
+ *
+ * @param event The event-like object to subscribe to.
+ * @param listener The listener to subscribe with.
+ * @returns The connection object.
  */
-export function useEventListener<T extends EventLike>(
+export default function useEventListener<T extends EventLike>(
 	event: T,
 	listener: T extends EventLike<infer U> ? U : never,
 ): ReturnType<T> {

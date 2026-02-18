@@ -3,7 +3,6 @@ import Vide from "@rbxts/vide";
 
 // Types
 import type Types from "./types";
-import type AppForge from "./forge";
 
 // Hooks
 import { px } from "./hooks/usePx";
