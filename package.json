@@ -1,6 +1,6 @@
 {
-	"name": "@rbxts/app-forge",
-	"version": "0.7.2-prototype.40",
+	"name": "@rbxts/forge",
+	"version": "0.1.0",
 	"description": "An App Manager for Vide",
 	"main": "out/init.lua",
 	"types": "out/index.d.ts",
@@ -14,7 +14,6 @@
 
 	"keywords": [
 		"roblox-ts",
-		"react",
 		"vide"
 	],
 	"author": "loner1536",

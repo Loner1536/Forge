@@ -13,7 +13,6 @@
 - **Centralized visibility** per app  
 - **Rules system**: parent/child, exclusive groups, ZIndex  
 - **Render groups** for selective mounting  
-- **Built-in debug logger & performance tracing**  
 - **Fully typed with roblox-ts**
 
 ---
@@ -52,8 +51,6 @@ AppForge is the runtime manager:
     Applies rules automatically
 
     Exposes imperative helpers: open, close, toggle
-
-    Owns debugger & logger
 
 One Forge per UI root is recommended.
 Rules
@@ -135,31 +132,6 @@ export class Inventory extends Args {
 
     rules define relationships (parent, exclusive group, ZIndex)
 
-🐞 Debugging
-
-AppForge provides Studio-only debug logging:
-
-forge.debug.enable("render");
-forge.debug.enable("rules");
-forge.debug.enableAll();   // everything
-forge.debug.disable("render");
-
-Performance tracing example:
-
-[PERF][render][Inventory] 1.243ms
-
-🧱 Architecture Overview
-
-AppForge
- ├─ AppRegistry (static)
- ├─ Visibility Sources
- ├─ Render Manager
- ├─ Rule Engine
- │   ├─ Parent Rule
- │   └─ Exclusive Group Rule
- ├─ Debugger / Logger
- └─ Vide Mount
-
 ⚠️ Notes
 
     Apps are singletons per Forge
@@ -168,15 +140,7 @@ AppForge
 
     Rules are reactive
 
-    Debug logging only runs in Studio
-
     API is alpha — may change
-
-🛣 Roadmap
-
-    Better developer warnings
-
-    Debug inspector
 
 📜 License
 
