@@ -20,8 +20,6 @@ import hasAppSource from "./helpers/hasAppSource";
 import setAppSource from "./helpers/setAppSource";
 import getAppEntry from "./helpers/getAppEntry";
 
-type Destructor = () => void;
-
 export default class AppForge extends Renders {
 	constructor() {
 		super();
