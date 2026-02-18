@@ -1,5 +1,12 @@
 # AppForge
 
+<p align="center">
+
+<strong>SOME OF THIS MIGHT BE OUTDATED!</strong>
+
+</p>
+
+
 > ⚠️ **Documentation Notice**  
 > Written with AI assistance. Please report any issues in [GitHub Issues](https://github.com/Loner1536/AppForge/issues) or on Discord: `@loner71x`.
 
@@ -52,13 +59,14 @@ AppForge is the runtime manager:
 
     Exposes imperative helpers: open, close, toggle
 
-One Forge per UI root is recommended.
+One Forge ONLY is VERY recommended.
 Rules
-Rule	Description
-parent	Child app closes automatically when parent closes
-detach	Prevents automatic anchoring to parent
-exclusiveGroup	Only one app in the group may be open
-index	Sets ZIndex of the app container
+    parent	Child app closes automatically when parent closes
+        parentGroup	Leave Empty if target Tree doesnt have one
+        attach	anchors child tree to parent
+
+    exclusiveGroup	Only one app in the group may be open
+    index	Sets ZIndex of the app tree
 
 Rules are reactively enforced when visibility changes.
 Render Groups
@@ -130,15 +138,11 @@ export class Inventory extends Args {
 
     px provides scaling helpers automatically
 
-    rules define relationships (parent, exclusive group, ZIndex)
+    rules define relationships
 
 ⚠️ Notes
 
     Apps are singletons per Forge
-
-    Rendering twice warns if px is re-initialized
-
-    Rules are reactive
 
     API is alpha — may change
 
