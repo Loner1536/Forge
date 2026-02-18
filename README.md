@@ -1,11 +1,11 @@
-# AppForge
+# Forge
 
 **⚠️ SOME OF THIS MIGHT BE OUTDATED! ⚠️**
 
 > ⚠️ **Documentation Notice**  
-> Written with AI assistance. Please report any issues in [GitHub Issues](https://github.com/Loner1536/AppForge/issues) or on Discord: `@loner71x`.
+> Written with AI assistance. Please report any issues in [GitHub Issues](https://github.com/Loner1536/Forge/issues) or on Discord: `@loner71x`.
 
-**AppForge** is a **declarative UI application manager** for [Vide](https://github.com/centau/vide) in **roblox-ts**. It allows you to structure, mount, and control UI “apps” with centralized visibility, parent-child relationships, exclusive groups, and ZIndex rules — without tangled state.
+**Forge** is a **declarative UI application manager** for [Vide](https://github.com/centau/vide) in **roblox-ts**. It allows you to structure, mount, and control UI “apps” with centralized visibility, parent-child relationships, exclusive groups, and ZIndex rules — without tangled state.
 
 ---
 
@@ -44,7 +44,7 @@ An App is a self-contained UI unit:
 Apps are defined using the @App decorator and must extend Args.
 Forge
 
-AppForge is the runtime manager:
+Forge is the runtime manager:
 
     Holds all visibility sources
 
