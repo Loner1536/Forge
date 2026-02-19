@@ -27,6 +27,7 @@ function callable<T extends Callback, U>(callback: T, object: U): T & U {
 	});
 }
 
+export const screen = source(new Vector2(0, 0));
 export const px = callable((value: number) => math.round(value * SCALE()), {
 	scale: (value: number) => value * SCALE(),
 	even: (value: number) => math.round(value * SCALE() * 0.5) * 2,
@@ -36,7 +37,10 @@ export const px = callable((value: number) => math.round(value * SCALE()), {
 
 function calculateScale() {
 	const target = TARGET();
-	if (!target) return;
+	if (!target) return screen(new Vector2(0, 0));
+
+	if (target.IsA("Camera")) screen(target.ViewportSize);
+	else if (target.IsA("GuiObject")) screen(target.AbsoluteSize);
 
 	const size = target.IsA("Camera")
 		? target.ViewportSize

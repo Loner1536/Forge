@@ -1,6 +1,6 @@
 {
 	"name": "@rbxts/forge",
-	"version": "0.0.6",
+	"version": "0.0.8-beta-9",
 	"description": "An App Manager for Vide",
 	"main": "out/init.lua",
 	"types": "out/index.d.ts",
@@ -41,12 +41,7 @@
 	"dependencies": {
 		"@rbxts/set-timeout": "^1.1.2",
 		"@rbxts/services": "^1.6.0",
-		"@rbxts/vide": "^0.6.0"
-	},
-	"peerDependenciesMeta": {
-		"@rbxts/vide": {
-			"optional": true
-		}
+		"@rbxts/vide": "*"
 	},
 
 	"devDependencies": {

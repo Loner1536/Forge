@@ -33,6 +33,8 @@ declare namespace Types {
 
 		type Class = AppProps & {
 			forge: AppForge;
+
+			screen: typeof import("./hooks/usePx").screen;
 			px: typeof import("./hooks/usePx").px;
 		};
 	}
@@ -45,9 +47,10 @@ declare namespace Types {
 			rules?: Rules.Generic<N>;
 		};
 
-		type Static = {
+		type Static<N extends AppNames = AppNames> = {
 			constructor: new (props: Types.Props.Main, name: AppNames, group?: AppGroups) => Args;
 
+			name: N;
 			visible?: boolean;
 			group?: AppGroups;
 			rules?: Rules.Static;
@@ -56,6 +59,7 @@ declare namespace Types {
 		type Generic<N extends AppNames = AppNames> = {
 			constructor: new (props: Types.Props.Main, name: AppNames, group?: AppGroups) => Args;
 
+			name: N;
 			visible?: boolean;
 			group?: AppGroups;
 			rules?: Rules.Generic<N>;

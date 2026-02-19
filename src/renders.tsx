@@ -1,8 +1,8 @@
 // Services
-import { Players, RunService } from "@rbxts/services";
+import { Workspace } from "@rbxts/services";
 
 // Packages
-import Vide, { apply, mount } from "@rbxts/vide";
+import Vide, { apply } from "@rbxts/vide";
 
 // Types
 import type Types from "./types";
@@ -22,13 +22,15 @@ import getAppEntry from "./helpers/getAppEntry";
 type Render = {
 	instance: Instance;
 	container: Instance;
+	anchor: Instance | undefined;
 	entry: Types.AppRegistry.Static;
 };
 
 export default class Renders extends Rules {
-	private __px = false;
-
 	protected Loaded = new Map<AppNames, Map<AppGroups, Render>>();
+	protected props!: Types.Props.Main;
+
+	private __initalize = false;
 
 	constructor() {
 		super();
@@ -41,9 +43,9 @@ export default class Renders extends Rules {
 		const load: Instance[] = [];
 
 		toLoad.forEach((entry) => {
-			const name = tostring(entry.constructor);
+			const name = entry.name;
 			const group = entry.group!;
-			const render = this.createInstance(props, name, group);
+			const render = this.createInstance(name, group);
 
 			if (!render) return;
 
@@ -55,10 +57,16 @@ export default class Renders extends Rules {
 		return load;
 	}
 	protected Initalize(props: Types.Props.Main) {
-		if (!this.__px) {
-			usePx(props.config?.px.target, props.config?.px.resolution, props.config?.px.minScale);
+		if (!this.__initalize) {
+			usePx(
+				props.config?.px.target || Workspace.CurrentCamera,
+				props.config?.px.resolution,
+				props.config?.px.minScale,
+			);
 
-			this.__px = true;
+			this.props = props;
+
+			this.__initalize = true;
 		}
 
 		return this.Load(props);
@@ -94,7 +102,7 @@ export default class Renders extends Rules {
 	}
 	private expandWithChildren(entries: Types.AppRegistry.Static[]) {
 		const result = [...entries];
-		const selected = new Set(entries.map((e) => tostring(e.constructor)));
+		const selected = new Set(entries.map((e) => e.name));
 
 		AppRegistry.forEach((groupEntries) => {
 			groupEntries.forEach((entry) => {
@@ -107,12 +115,12 @@ export default class Renders extends Rules {
 
 		return result;
 	}
-	private createInstance(props: Types.Props.Main, name: AppNames, group: AppGroups) {
+	private createInstance(name: AppNames, group: AppGroups) {
 		const entry = getAppEntry(name, group);
 		if (!entry) return;
 
 		// App Entry Instance/Render
-		const entryInstance = new entry.constructor(props, name, group).render() as Instance;
+		const entryInstance = new entry.constructor(this.props, name, group).render() as Instance;
 		entryInstance.Name = "Render";
 
 		// Parent Container
@@ -129,24 +137,7 @@ export default class Renders extends Rules {
 
 		// Anchor
 		let anchor;
-		if (entry.rules?.anchor) {
-			const parentName = entry.rules.parent;
-			const parentGroup = entry.rules.parentGroup || "None";
-			if (!parentName) return;
-
-			const parentEntry = getAppEntry(entry.rules.parent, parentGroup);
-			if (!parentEntry) return;
-
-			anchor = new parentEntry.constructor(props, parentName, parentGroup).render() as GuiObject;
-			anchor.GetDescendants().forEach((instance) => instance.Destroy());
-
-			apply(anchor)({
-				Name: "Anchor",
-				BackgroundTransparency: 1,
-
-				[0]: entryInstance,
-			});
-		}
+		if (entry.rules?.anchor) anchor = this.createAnchor(name, group, entryInstance);
 
 		const container = (
 			<frame
@@ -162,11 +153,55 @@ export default class Renders extends Rules {
 		) as Instance;
 
 		const newMap = new Map<AppGroups, Render>();
-		const render = { container, instance: entryInstance, entry };
+		const render = { container, instance: entryInstance, entry, anchor };
 		newMap.set(group, render);
 
 		this.Loaded.set(name, newMap);
 
 		return render;
+	}
+
+	protected createAnchor(
+		name: AppNames,
+		group: AppGroups,
+		entryInstance: Instance,
+	): Instance | undefined {
+		const entry = getAppEntry(name, group);
+		if (!entry || !entry.rules) return;
+
+		if (!entryInstance) {
+			const loaded = this.Loaded.get(name)?.get(group);
+			if (loaded) {
+				entryInstance = loaded.instance;
+			} else {
+				warn("Failed to get Instance for Anchor");
+				return;
+			}
+		}
+
+		const parentName = entry.rules.parent;
+		const parentGroup = entry.rules.parentGroup || "None";
+		if (!parentName) return;
+
+		const parentEntry = getAppEntry(entry.rules.parent, parentGroup);
+		if (!parentEntry) return;
+
+		const anchor = new parentEntry.constructor(
+			this.props,
+			parentName,
+			parentGroup,
+		).render() as GuiObject;
+
+		// Clear Descendants
+		anchor.GetDescendants().forEach((instance) => instance.Destroy());
+
+		apply(anchor)({
+			Name: "Anchor",
+			BackgroundTransparency: 1,
+
+			[0]: entryInstance,
+		});
+
+		return anchor;
 	}
 }

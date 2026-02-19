@@ -5,7 +5,7 @@ import Vide from "@rbxts/vide";
 import type Types from "./types";
 
 // Hooks
-import { px } from "./hooks/usePx";
+import { px, screen } from "./hooks/usePx";
 
 export const AppRegistry = new Map<AppNames, Map<AppGroups, Types.AppRegistry.Static>>();
 export const AppSources = new Map<AppNames, Map<AppGroups, Vide.Source<boolean>>>();
@@ -39,6 +39,8 @@ export function App<N extends AppNames>(props: Types.AppRegistry.Props<N>) {
 
 		AppRegistry.get(props.name)?.set(props.group || "None", {
 			constructor,
+
+			name: props.name,
 			group: props.group || "None",
 			visible: props.visible,
 			rules: props.rules,
@@ -66,6 +68,7 @@ export abstract class Args {
 
 		this.props = {
 			...props.props,
+			screen,
 			forge,
 			px,
 		};

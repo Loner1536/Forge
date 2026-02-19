@@ -46,25 +46,7 @@ export default class AppForge extends Renders {
 		return src!;
 	}
 	public bind(name: AppNames, group: AppGroups = "None", value: Vide.Source<boolean>) {
-		if (!RunService.IsRunning()) {
-			bindAppSource(name, group, value);
-
-			let count = 0;
-			let _prev: boolean;
-
-			effect(() => {
-				count++;
-				_prev = value();
-
-				untrack(() => this.checkRules(this, name, group));
-
-				if (Vide.strict && count === 2) count = 0;
-				else if (!Vide.strict && count === 1) count = 0;
-			});
-		} else
-			warn(
-				".bind should ONLY be used for UI-Labs or something that displays UI WITHOUT the game running",
-			);
+		bindAppSource(name, group, value);
 	}
 
 	// TODO: make a separate files for rules
