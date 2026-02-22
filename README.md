@@ -69,7 +69,7 @@ Registers a class as a **child UI app** linked to a parent. The child is rendere
     group?: AppGroups,    // Defaults to "None"
     visible?: boolean,    // Defaults to false
     zIndex?: number,      // Defaults to 0
-    rules: {
+    rules: {              // Required
         parent: AppNames,           // Required
         parentGroup?: AppGroups,    // Defaults to "None"
         anchor?: boolean,           // Defaults to false
@@ -127,17 +127,33 @@ Both expose the following on `this`:
 |----------|------|-------------|
 | `forge` | `CreateForge` | The Forge controller — open, close, toggle, bind other apps |
 | `source` | `Source<boolean>` | Reactive visibility state for **this** app |
-| `props.player` | `Player` | The player passed in from `AppProps` |
-| `props.px` | `px` | Pixel-scaling utility (see [px & screen](#px--screen)) |
-| `props.screen` | `Source<Vector2>` | Reactive current screen size |
 | `name` | `AppNames` | This app's registered name |
 | `group` | `AppGroups` | This app's registered group (`"None"` if unset) |
+| `props.px` | `px` | Pixel-scaling utility (see [px & screen](#px--screen)) |
+| `props.screen` | `Source<Vector2>` | Reactive current screen size |
+| `props.[...AppProps]` | — | Everything from your global `AppProps` (e.g. `props.player`) |
 
 `ChildArgs` additionally exposes:
 
 | Property | Type | Description |
 |----------|------|-------------|
 | `parentSource` | `Source<boolean>` | Reactive visibility state of the **parent** app |
+
+---
+
+## Exported Types
+
+Forge exports three convenience types from `types.d.ts` for use in your own files:
+
+```ts
+import type { ForgeProps, ClassProps, RenderProps } from "@rbxts/forge";
+```
+
+| Export | Full Type | Description |
+|--------|-----------|-------------|
+| `ForgeProps` | `Types.Props.Main` | The full props object passed to `render()` and `story()` — includes `props`, `forge`, `config`, and `renders` |
+| `ClassProps` | `Types.Props.Class` | What `this.props` looks like inside a component — your `AppProps` plus `px` and `screen` |
+| `RenderProps` | `Types.Render.Props` | The `renders` filter object accepted by `render()` and `story()` |
 
 ---
 
@@ -149,16 +165,16 @@ Both expose the following on `this`:
 forge.open("Child", "Rules")          // Set visibility to true
 forge.close("Child", "Rules")         // Set visibility to false
 forge.toggle("Child", "Rules")        // Flip current visibility
-forge.set("Child", "Rules", true)     // Set visibility to an explicit value
+forge.set("Child", "Rules", true)     // Set to an explicit boolean value
 
-// Bind an external Vide Source<boolean> directly to an app's visibility.
+// Bind an external Vide Source<boolean> to an app's visibility.
 // Useful for wiring UI-Labs story controls.
 forge.bind("Parent", "Rules", mySource)
 
-// Render all registered apps (or a filtered subset) into a Vide tree
-forge.render({ props: { props, renders } })
+// Render registered apps into a Vide tree (used in-game)
+forge.render({ props, renders })
 
-// Render into a story target (for UI-Labs)
+// Render into a story container (used in UI-Labs)
 forge.story({ props, target, renders, config })
 ```
 
@@ -168,11 +184,11 @@ The `group` parameter defaults to `"None"` on all methods if omitted.
 
 ## px & screen
 
-`px` and `screen` are injected into `this.props` automatically. You do **not** need to call `usePx()` manually — Forge initializes it internally when you call `render()` or `story()`.
+`px` and `screen` are injected into `this.props` automatically as part of `ClassProps`. You do **not** need to call `usePx()` manually — Forge initializes it internally when you call `render()` or `story()`.
 
 ### `px(value)`
 
-Scales a pixel value relative to the current viewport, using a base resolution of `1920×1080` and an equal blend of width and height scaling. Minimum scale defaults to `0.5`.
+Scales a pixel value relative to the current viewport, using a base resolution of `1920×1080` and an equal blend of width/height scaling. Minimum scale defaults to `0.5`.
 
 ```ts
 const { px } = this.props;
@@ -186,7 +202,7 @@ px.ceil(200)    // math.ceil
 
 ### `screen`
 
-A reactive `Source<Vector2>` that holds the **current screen/viewport size** and updates automatically on resize.
+A reactive `Source<Vector2>` representing the **current size** of the render target (viewport or GuiObject). Updates automatically on resize.
 
 ```ts
 const { screen } = this.props;
@@ -196,9 +212,42 @@ screen() // → e.g. Vector2.new(1920, 1080)
 
 ---
 
-## Rendering In-Game
+## `Config` (optional)
 
-Create a `CreateForge` instance and call `forge.render()` inside a Vide `mount`. Use `renders` to filter which apps are loaded — omit it to render everything registered.
+Both `render()` and `story()` accept an optional `config` object to override px defaults:
+
+```ts
+type Config = {
+    px?: {
+        target?: GuiObject | Camera   // defaults to Workspace.CurrentCamera
+        resolution?: Vector2          // defaults to Vector2.new(1920, 1080)
+        minScale?: number             // defaults to 0.5
+    }
+}
+```
+
+---
+
+## `renders` Filter (optional)
+
+Both `render()` and `story()` accept an optional `renders` filter to control which registered apps are loaded. The type system enforces that `name`/`names` and `group`/`groups` are mutually exclusive — you can't pass both at once.
+
+```ts
+// Valid combinations:
+renders: { name: "Parent" }
+renders: { names: ["Parent", "Child"] }
+renders: { group: "Rules" }
+renders: { groups: ["Rules", "Other"] }
+renders: { name: "Parent", group: "Rules" }
+renders: { names: ["Parent"], groups: ["Rules"] }
+// ...and so on
+```
+
+Omitting `renders` entirely loads **all** registered apps.
+
+---
+
+## Rendering In-Game
 
 ```ts
 // controllers/app.ts
@@ -218,22 +267,11 @@ public createProps(player: Player): AppProps {
 }
 ```
 
-The `renders` filter supports:
-
-```ts
-renders?: {
-    name?: AppNames        // single app by name
-    names?: AppNames[]     // multiple apps by name
-    group?: AppGroups      // all apps in a group
-    groups?: AppGroups[]   // all apps in multiple groups
-}
-```
-
 ---
 
 ## UI-Labs / Stories
 
-Use `forge.story()` for previewing components in [UI-Labs](https://github.com/flipbook-labs/ui-labs).
+Use `forge.story()` for previewing components in [UI-Labs](https://github.com/PepeElToro41/ui-labs) — a storybook plugin for Roblox that lets you visualize UI stories in real-time. You can find the plugin on the [Roblox Store](https://create.roblox.com/store/asset/14293316215/UI-Labs), and the roblox-ts utility package on [npm](https://www.npmjs.com/package/@rbxts/ui-labs).
 
 ### Shared Setup Component
 
@@ -268,7 +306,7 @@ export default function Setup<T extends InferProps<{}>>({
 }
 ```
 
-> ⚠️ `Flamework.addPaths()` must run before `new CreateForge()` — otherwise decorators won't have had a chance to register and the AppRegistry will be empty.
+> ⚠️ `Flamework.addPaths()` must run before `new CreateForge()` so all decorator registrations complete before the AppRegistry is consumed.
 
 ### Writing a Story
 
