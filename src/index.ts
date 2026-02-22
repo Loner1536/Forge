@@ -1,15 +1,15 @@
 // Decorators
-export { App, Args } from "./appRegistry";
+export { App, Args, ChildApp, ChildArgs, Fade } from "@root/decorators";
 
 // Creators
-export { default as CreateForge } from "./forge";
+export { default as CreateForge } from "@root/forge";
 
 // Types
 export type {
 	ForgeProps,
 	ClassProps,
 	RenderProps,
-} from "./types";
+} from "@root/types";
 
-export { default as useAppContext } from "./hooks/useAppContext";
-export { default as Contexts } from "./context";
+export { default as useForgeContext } from "@hooks/useForgeContext";
+export { default as ForgeContext } from "@root/appContext";

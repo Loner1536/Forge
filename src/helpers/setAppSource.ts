@@ -2,7 +2,7 @@
 import { source } from "@rbxts/vide";
 
 // Components
-import { AppSources } from "../appRegistry";
+import { AppSources } from "@registries/apps";
 
 export default function setAppSource(name: AppNames, group: AppGroups, value: boolean) {
 	if (!AppSources.get(name)) AppSources.set(name, new Map());

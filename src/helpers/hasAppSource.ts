@@ -1,5 +1,5 @@
 // Components
-import { AppSources } from "../appRegistry";
+import { AppSources } from "@registries/apps";
 
 export default function hasAppSource(name: AppNames, group: AppGroups) {
 	const sourceMap = AppSources.get(name);

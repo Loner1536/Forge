@@ -1,14 +1,16 @@
 // Packages
+import { App, Args, Fade } from "@rbxts/forge";
 import Vide, { spring } from "@rbxts/vide";
-import { App, Args } from "@rbxts/forge";
 
+@Fade()
 @App({
-	name: "Template",
+	name: "Fade",
+	group: "Rules",
 	visible: true,
 })
 export default class Template extends Args {
 	render() {
-		const { px, forge } = this.props;
+		const { px } = this.props;
 
 		const [position, _] = spring(
 			() => {
@@ -21,19 +23,19 @@ export default class Template extends Args {
 
 		return (
 			<frame
-				Name={"Template"}
 				Size={() => UDim2.fromOffset(px(200), px(200))}
 				AnchorPoint={new Vector2(0.5, 0.5)}
 				Position={position}
 				ZIndex={10}
 			>
+				<uicorner CornerRadius={() => new UDim(0, px(15))} />
+
 				<textbutton
 					Name={"Button"}
 					BackgroundColor3={Color3.fromRGB(30, 30, 30)}
-					AnchorPoint={new Vector2(0.5, 0.5)}
-					Position={UDim2.fromScale(0.5, 0.5)}
+					AnchorPoint={new Vector2(0.5, 1)}
+					Position={() => new UDim2(0.5, 0, 1, -px(5))}
 					Size={() => UDim2.fromOffset(px(100), px(50))}
-					Activated={() => forge.toggle("Child")}
 				>
 					<uicorner CornerRadius={() => new UDim(0, px(15))} />
 				</textbutton>

@@ -1,9 +1,6 @@
 // Types
-import type AppForge from "../forge";
-import type Types from "../types";
-
-// Components
-import { AppRegistry } from "../appRegistry";
+import type AppForge from "@root/forge";
+import type Types from "@root/types";
 
 // Rules
 import ExclusiveGroupRule from "./check/exclusiveGroup";
@@ -11,7 +8,8 @@ import AnchorRule from "./render/anchor";
 import ParentRule from "./check/parent";
 
 // Helpers
-import getAppEntry from "../helpers/getAppEntry";
+import isChildAppRules from "@helpers/isChildAppRules";
+import getAppEntry from "@helpers/getAppEntry";
 
 export default class Rules {
 	protected processing = new Set<AppNames>();
@@ -26,7 +24,7 @@ export default class Rules {
 		if (!rules) return;
 
 		// Parent Anchor
-		if (rules.parent && !rules.anchor) AnchorRule(name, group, props);
+		if (isChildAppRules(rules) && rules.anchor) AnchorRule(name, group, props);
 
 		// Index
 		if (rules.zIndex !== undefined) {
@@ -41,7 +39,7 @@ export default class Rules {
 		this.processing.add(name);
 
 		try {
-			ParentRule(forge, name, group);
+			ParentRule(name, group);
 			ExclusiveGroupRule(forge, name, group);
 		} finally {
 			this.processing.delete(name);

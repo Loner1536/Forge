@@ -1,28 +1,26 @@
-// Services
-import { RunService } from "@rbxts/services";
-
 // Packages
-import Vide, { apply, create, effect, untrack } from "@rbxts/vide";
+import Vide, { apply, create } from "@rbxts/vide";
 
 // Types
-import type Types from "./types";
+import type Types from "@root/types";
 
 // Classes
-import Renders from "./renders";
+import Renders from "@root/renders";
 
 // Components
-import { AppRegistry } from "./appRegistry";
+import { AppRegistry } from "@registries/apps";
 
 // Helpers
-import bindAppSource from "./helpers/bindAppSource";
-import getAppSource from "./helpers/getAppSource";
-import hasAppSource from "./helpers/hasAppSource";
-import setAppSource from "./helpers/setAppSource";
-import getAppEntry from "./helpers/getAppEntry";
+import bindAppSource from "@helpers/bindAppSource";
+import getAppSource from "@helpers/getAppSource";
+import hasAppSource from "@helpers/hasAppSource";
+import setAppSource from "@helpers/setAppSource";
+import getAppEntry from "@helpers/getAppEntry";
 
 export default class AppForge extends Renders {
 	constructor() {
 		super();
+
 		AppRegistry.forEach((entryMap, name) => {
 			entryMap.forEach((_, group) => {
 				this.createSource(name, group);
@@ -38,19 +36,12 @@ export default class AppForge extends Renders {
 
 		setAppSource(name, group, entry.visible ?? false);
 	}
-	public getSource(name: AppNames, group: AppGroups = "None") {
-		if (!hasAppSource(name, group)) this.createSource(name, group);
-
-		const src = getAppSource(name, group);
-
-		return src!;
-	}
 	public bind(name: AppNames, group: AppGroups = "None", value: Vide.Source<boolean>) {
 		bindAppSource(name, group, value);
 	}
 
 	// TODO: make a separate files for rules
-	public set(name: AppNames, group: AppGroups = "None", value: boolean, rules = true) {
+	public set(name: AppNames, group: AppGroups = "None", value: boolean) {
 		let src = getAppSource(name, group);
 		if (!src) return;
 
@@ -59,20 +50,20 @@ export default class AppForge extends Renders {
 
 		src(value);
 
-		if (rules) this.checkRules(this, name, group);
+		this.checkRules(this, name, group);
 	}
 
-	public open(name: AppNames, group: AppGroups = "None", rules = true) {
-		this.set(name, group, true, rules);
+	public open(name: AppNames, group: AppGroups = "None") {
+		this.set(name, group, true);
 	}
-	public close(name: AppNames, group: AppGroups = "None", rules = true) {
-		this.set(name, group, false, rules);
+	public close(name: AppNames, group: AppGroups = "None") {
+		this.set(name, group, false);
 	}
-	public toggle(name: AppNames, group: AppGroups = "None", rules = true) {
-		const src = this.getSource(name, group);
+	public toggle(name: AppNames, group: AppGroups = "None") {
+		const src = getAppSource(name, group);
 		if (!src) return;
 
-		this.set(name, group, !src(), rules);
+		this.set(name, group, !src());
 	}
 
 	story = ({
@@ -83,7 +74,7 @@ export default class AppForge extends Renders {
 	}: {
 		props: AppProps;
 		target: GuiObject;
-		renders?: Types.Props.Render;
+		renders?: Types.Render.Props;
 		config?: Types.Props.Config;
 	}) => {
 		const Container = create("Frame")({
@@ -102,7 +93,7 @@ export default class AppForge extends Renders {
 				config: {
 					px: {
 						target,
-						minScale: config?.px.minScale,
+						minScale: config?.px?.minScale,
 					},
 				},
 			}),

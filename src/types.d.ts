@@ -1,100 +1,146 @@
 // Types
-import type { Args } from "./appRegistry";
-import type AppForge from "./forge";
+import type { Args, ChildArgs } from "@root/decorators";
+import type CreateForge from "@root/forge";
 
 declare namespace Types {
-	namespace Props {
-		type NameSelector =
-			| { name: AppNames; names?: never }
-			| { names: AppNames[]; name?: never }
-			| { name?: undefined; names?: undefined };
-
+	/* =======================
+	 * Props
+	 * ======================= */
+	namespace Render {
+		type NameSelector = { name: AppNames; names?: never } | { names: AppNames[]; name?: never };
 		type GroupSelector =
 			| { group: AppGroups; groups?: never }
-			| { groups: AppGroups[]; group?: never }
-			| { group?: undefined; groups?: undefined };
+			| { groups: AppGroups[]; group?: never };
 
-		export type Render = NameSelector & GroupSelector;
+		type NameOnly = { name: AppNames; names?: never; group?: never; groups?: never };
+		type NamesOnly = { names: AppNames[]; name?: never; group?: never; groups?: never };
+		type GroupOnly = { group: AppGroups; groups?: never; name?: never; names?: never };
+		type GroupsOnly = { groups: AppGroups[]; group?: never; name?: never; names?: never };
+		type NameAndGroup = { name: AppNames; names?: never; group: AppGroups; groups?: never };
+		type NameAndGroups = { name: AppNames; names?: never; groups: AppGroups[]; group?: never };
+		type NamesAndGroup = { names: AppNames[]; name?: never; group: AppGroups; groups?: never };
+		type NamesAndGroups = { names: AppNames[]; name?: never; groups: AppGroups[]; group?: never };
 
-		type Main = {
+		export type Props =
+			| NameOnly
+			| NamesOnly
+			| GroupOnly
+			| GroupsOnly
+			| NameAndGroup
+			| NameAndGroups
+			| NamesAndGroup
+			| NamesAndGroups;
+	}
+
+	/* =======================
+	 * Props
+	 * ======================= */
+	namespace Props {
+		export type Main = {
 			props: AppProps;
-			forge: AppForge;
+			forge: CreateForge;
 			config?: Config;
-			renders?: Render;
+			renders?: Render.Props;
 		};
 
-		type Config = {
-			px: {
+		export type Config = {
+			px?: {
 				target?: GuiObject | Camera;
 				resolution?: Vector2;
 				minScale?: number;
 			};
 		};
 
-		type Class = AppProps & {
-			forge: AppForge;
-
+		export type Class = AppProps & {
 			screen: typeof import("./hooks/usePx").screen;
 			px: typeof import("./hooks/usePx").px;
 		};
 	}
 
-	namespace AppRegistry {
-		type Props<N extends AppNames> = {
-			name: N;
-			visible?: boolean;
-			group?: AppGroups;
-			rules?: Rules.Generic<N>;
-		};
-
-		type Static<N extends AppNames = AppNames> = {
-			constructor: new (props: Types.Props.Main, name: AppNames, group?: AppGroups) => Args;
-
-			name: N;
-			visible?: boolean;
-			group?: AppGroups;
-			rules?: Rules.Static;
-		};
-
-		type Generic<N extends AppNames = AppNames> = {
-			constructor: new (props: Types.Props.Main, name: AppNames, group?: AppGroups) => Args;
-
-			name: N;
-			visible?: boolean;
-			group?: AppGroups;
-			rules?: Rules.Generic<N>;
-		};
-	}
-
+	/* =======================
+	 * Rules
+	 * ======================= */
 	namespace Rules {
-		type WithParent<P> = {
+		type WithParent<P extends AppNames = AppNames> = {
 			parent: P;
-
 			parentGroup?: AppGroups;
 			anchor?: boolean;
 		};
 
-		type WithoutParent = {
-			parent?: never;
-
-			parentGroup?: never;
-			anchor?: never;
-		};
-
-		export type Static = {
-			exclusiveGroup?: string;
-			zIndex?: number;
-		} & (WithParent<string> | WithoutParent);
-
-		export type Generic<N extends AppNames = AppNames> = {
+		export type App = {
 			exclusiveGroup?: AppGroups;
 			zIndex?: number;
-		} & (WithParent<Exclude<AppNames, N>> | WithoutParent);
+		};
+
+		export type ChildApp = {
+			exclusiveGroup?: AppGroups;
+			zIndex?: number;
+		} & WithParent;
+	}
+
+	/* =======================
+	 * App Registry
+	 * ======================= */
+	namespace Fade {
+		export type Config = {
+			period?: number;
+			dampeningRatio?: number;
+		};
+
+		export type Constructor = {
+			__forge_fade?: Fade.Config;
+		};
+	}
+
+	/* =======================
+	 * App Registry
+	 * ======================= */
+	namespace Decorator {
+		export type Constructor<N extends AppNames = AppNames> = new (
+			entry: Entry<N>,
+			props: Props.Main,
+		) => Args;
+
+		export type ChildConstructor<N extends AppNames = AppNames> = new (
+			entry: ChildEntry<N>,
+			props: Props.Main,
+		) => ChildArgs;
+
+		export type Entry<N extends AppNames = AppNames> = {
+			constructor: Constructor<N>;
+			name: AppNames;
+			group?: AppGroups;
+			visible?: boolean;
+			rules?: Rules.App;
+			fade?: Fade.Config;
+		};
+
+		export type ChildEntry<N extends AppNames = AppNames> = {
+			constructor: ChildConstructor<N>;
+			name: AppNames;
+			group?: AppGroups;
+			visible?: boolean;
+			rules: Rules.ChildApp;
+			fade?: Fade.Config;
+		};
+
+		export type AppProps<N extends AppNames = AppNames> = {
+			name: N;
+			group?: AppGroups;
+			visible?: boolean;
+			rules?: Rules.App;
+		};
+		export type ChildAppProps<N extends AppNames = AppNames> = {
+			name: N;
+			group?: AppGroups;
+			visible?: boolean;
+			rules: Rules.ChildApp;
+		};
 	}
 }
 
 export type ForgeProps = Types.Props.Main;
 export type ClassProps = Types.Props.Class;
-export type RenderProps = Types.Props.Render;
+export type RenderProps = Types.Render.Props;
 
 export default Types;

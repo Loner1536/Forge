@@ -1,8 +1,8 @@
 // Packages
-import Vide, { source } from "@rbxts/vide";
+import Vide from "@rbxts/vide";
 
 // Components
-import { AppSources } from "../appRegistry";
+import { AppSources } from "../registries/apps";
 
 export default function bindAppSource(
 	name: AppNames,

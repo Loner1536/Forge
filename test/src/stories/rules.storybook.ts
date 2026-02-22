@@ -2,8 +2,8 @@
 import { type Storybook } from "@rbxts/ui-labs";
 
 const storybook: Storybook = {
-	name: "Test",
-	storyRoots: [script.Parent!.FindFirstChild("test")! as Folder],
+	name: "Rules",
+	storyRoots: [script.Parent!.FindFirstChild("rules")! as Folder],
 };
 
 export = storybook;
