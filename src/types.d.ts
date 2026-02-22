@@ -1,6 +1,6 @@
 // Types
 import type { Args, ChildArgs } from "@root/decorators";
-import type CreateForge from "@root/forge";
+import type { AppForge } from "@root/forge";
 
 declare namespace Types {
 	/* =======================
@@ -38,7 +38,7 @@ declare namespace Types {
 	namespace Props {
 		export type Main = {
 			props: AppProps;
-			forge: CreateForge;
+			forge: AppForge;
 			config?: Config;
 			renders?: Render.Props;
 		};
@@ -67,13 +67,9 @@ declare namespace Types {
 			anchor?: boolean;
 		};
 
-		export type App = {
-			exclusiveGroup?: AppGroups;
-		};
+		export type App = {};
 
-		export type ChildApp = {
-			exclusiveGroup?: AppGroups;
-		} & WithParent;
+		export type ChildApp = {} & WithParent;
 	}
 
 	/* =======================

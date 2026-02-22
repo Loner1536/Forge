@@ -1,15 +1,15 @@
 // Package
 import { Boolean, ControlGroup, CreateVideStory, type InferVideProps } from "@rbxts/ui-labs";
+import { Flamework } from "@flamework/core";
+import { Story } from "@rbxts/forge";
 import Vide from "@rbxts/vide";
 
-// Dependencies
-import Setup from "../setup";
+Flamework.addPaths("src/client/interface/apps");
 
 const controls = {
 	Parent: ControlGroup({
 		visible: Boolean(true),
 	}),
-
 	Child: ControlGroup({
 		visible: Boolean(false),
 	}),
@@ -21,8 +21,8 @@ const story = CreateVideStory(
 		controls,
 	},
 	(props: InferVideProps<typeof controls>) => (
-		<Setup
-			storyProps={props}
+		<Story
+			target={props.target}
 			render={{
 				name: "Parent",
 				group: "Rules",

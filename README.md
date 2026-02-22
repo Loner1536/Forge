@@ -1,6 +1,6 @@
 # @rbxts/forge
 
-A decorator-based UI framework for [roblox-ts](https://roblox-ts.com/) that manages app registration, parent/child relationships, visibility state, and fade transitions — built on top of [Vide](https://github.com/centau/vide).
+A decorator-based UI framework for [roblox-ts](https://roblox-ts.com/) that manages app registration, parent/child relationships, visibility state, rules, and fade transitions — built on top of [Vide](https://github.com/centau/vide).
 
 > **Issues or bugs?** Tag `@Xynz` or `@Loner71x` in the roblox-ts Discord server.
 
@@ -18,12 +18,12 @@ npm install @rbxts/forge
 
 ### `global.d.ts`
 
-> ⚠️ **Required.** This file must exist at the root of your project. It defines the global type system Forge uses to enforce type-safe app names, groups, and props across your entire codebase.
+> ⚠️ **Required.** This file must exist at the root of your project before anything else. It defines the global type system Forge uses to enforce type-safe app names, groups, and props across your entire codebase.
 
 ```ts
 declare global {
-    type AppGroups = "Rules";
-    type AppNames = "Parent" | "Child" | "Fade";
+    type AppGroups = "HUD" | "Menus";
+    type AppNames = "Inventory" | "Settings" | "Tooltip";
     type AppProps = {
         player: Player;
     };
@@ -35,7 +35,7 @@ export {};
 |------|-------------|
 | `AppGroups` | Union of every group name used in your project |
 | `AppNames` | Union of every app/component name |
-| `AppProps` | Shared props passed to all components (e.g. `player`) |
+| `AppProps` | Shared props passed to every component (e.g. `player`) |
 
 ---
 
@@ -43,7 +43,7 @@ export {};
 
 ### `@App(config)`
 
-Registers a class as a **root-level UI app**. Each `name + group` combination must be unique — Forge will throw a runtime error on duplicates.
+Registers a class as a **root-level UI app**. Each `name + group` combination must be globally unique — Forge throws a runtime error on duplicates.
 
 ```ts
 @App({
@@ -51,9 +51,7 @@ Registers a class as a **root-level UI app**. Each `name + group` combination mu
     group?: AppGroups,    // Defaults to "None"
     visible?: boolean,    // Defaults to false
     zIndex?: number,      // Defaults to 1
-    rules?: {
-        exclusiveGroup?: AppGroups, // ⚠️ Experimental
-    }
+    rules?: {},           // Optional — reserved for future rule types
 })
 ```
 
@@ -61,7 +59,9 @@ Registers a class as a **root-level UI app**. Each `name + group` combination mu
 
 ### `@ChildApp(config)`
 
-Registers a class as a **child UI app** linked to a parent. The child is rendered inside the parent's container. If `anchor: true`, the child's instance is placed inside a transparent copy of the parent's rendered frame, letting it position itself relative to the parent's layout.
+Registers a class as a **child UI app** linked to a parent. The child is rendered inside the parent's container.
+
+If `anchor: true`, the child's instance is placed inside a transparent clone of the parent's rendered frame — allowing the child to position itself relative to the parent's layout without inheriting its properties.
 
 ```ts
 @ChildApp({
@@ -70,10 +70,9 @@ Registers a class as a **child UI app** linked to a parent. The child is rendere
     visible?: boolean,    // Defaults to false
     zIndex?: number,      // Defaults to 0
     rules: {              // Required
-        parent: AppNames,           // Required
+        parent: AppNames,           // Required — the parent app's name
         parentGroup?: AppGroups,    // Defaults to "None"
         anchor?: boolean,           // Defaults to false
-        exclusiveGroup?: AppGroups, // ⚠️ Experimental
     }
 })
 ```
@@ -82,7 +81,7 @@ Registers a class as a **child UI app** linked to a parent. The child is rendere
 
 ### `@Fade(period?, dampeningRatio?)`
 
-Wraps an app in a spring-driven transparency fade. Must be placed **above** `@App` or `@ChildApp`. Both parameters are optional.
+Wraps an app in a **spring-driven transparency fade** using a `CanvasGroup`. Must be placed **above** `@App` or `@ChildApp`.
 
 ```ts
 @Fade(0.25, 0.75)
@@ -90,14 +89,14 @@ Wraps an app in a spring-driven transparency fade. Must be placed **above** `@Ap
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `period` | `0.5` | Spring period (controls speed) |
-| `dampeningRatio` | `0.75` | How quickly the spring settles |
+| `period` | `0.5` | Spring period in seconds — lower is faster |
+| `dampeningRatio` | `0.75` | How quickly the spring settles — `1` = no overshoot |
 
-**Decorator order matters** — `@Fade` must always be outermost:
+**Decorator order matters** — `@Fade` must always be the outermost decorator:
 
 ```ts
-@Fade(0.25)   // ← always outermost
-@App({ ... }) // ← always innermost
+@Fade(0.25)   // ← outermost
+@App({ ... }) // ← innermost
 export default class MyApp extends Args { ... }
 ```
 
@@ -105,19 +104,19 @@ export default class MyApp extends Args { ... }
 
 ## Base Classes
 
-### `Args` — for `@App`
+### `Args` — use with `@App`
 
 ```ts
 export default class MyApp extends Args {
-    render() { ... }
+    render(): Vide.Node { ... }
 }
 ```
 
-### `ChildArgs` — for `@ChildApp`
+### `ChildArgs` — use with `@ChildApp`
 
 ```ts
 export default class MyChild extends ChildArgs {
-    render() { ... }
+    render(): Vide.Node { ... }
 }
 ```
 
@@ -125,12 +124,12 @@ Both expose the following on `this`:
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `forge` | `CreateForge` | The Forge controller — open, close, toggle, bind other apps |
+| `forge` | `AppForge` | The Forge controller — open, close, toggle, bind other apps |
 | `source` | `Source<boolean>` | Reactive visibility state for **this** app |
 | `name` | `AppNames` | This app's registered name |
 | `group` | `AppGroups` | This app's registered group (`"None"` if unset) |
 | `props.px` | `px` | Pixel-scaling utility (see [px & screen](#px--screen)) |
-| `props.screen` | `Source<Vector2>` | Reactive current screen size |
+| `props.screen` | `Source<Vector2>` | Reactive current screen/viewport size |
 | `props.[...AppProps]` | — | Everything from your global `AppProps` (e.g. `props.player`) |
 
 `ChildArgs` additionally exposes:
@@ -141,31 +140,88 @@ Both expose the following on `this`:
 
 ---
 
+## Forge Controller
+
+`this.forge` (and the `AppForge` instance you create) exposes these methods:
+
+```ts
+forge.open("Inventory", "HUD")            // Set visibility to true
+forge.close("Inventory", "HUD")           // Set visibility to false
+forge.toggle("Inventory", "HUD")          // Flip current visibility
+forge.set("Inventory", "HUD", true)       // Set to an explicit boolean value
+
+// Sync an external Vide Source<boolean> into an app's visibility.
+// The external source drives the internal one — rules still apply on top.
+forge.bind("Inventory", "HUD", mySource)
+
+// Render registered apps into a Vide tree (used in-game)
+forge.render({ props: { props, renders } })
+
+// Render into a story container (used with UI-Labs)
+forge.story({ props, target, renders, config })
+```
+
+The `group` parameter defaults to `"None"` on all methods if omitted.
+
+> **Note on `bind`:** `bind` creates a one-way sync — the external source pushes into the internal one. Rules still fire on top of whatever the bound source sets. This means if a rule closes an app, the external source stays at its current value and will re-apply when it next changes.
+
+---
+
+## Rules
+
+Rules are logic that Forge automatically applies whenever an app's visibility changes. They are set up via `setupRuleEffects` after rendering and fire reactively through Vide's `effect` system.
+
+### ParentRule
+
+The only active rule currently. It enforces a visibility relationship between parent and child apps:
+
+**When a parent closes:**
+- Each child's current visibility is cached
+- All children are closed
+
+**When a parent opens:**
+- Each child is restored to its cached visibility state
+
+**While a parent is closed:**
+- If a child's visibility is changed (e.g. via `forge.set` or `forge.bind`), the cache updates to reflect the new desired state
+- When the parent opens, the child will restore to this updated value
+
+This means the cache always represents **what the child wants to be** when the parent is visible again — not just what it was when the parent closed.
+
+```ts
+// Example behavior:
+// Parent open, Child open → close parent → child closes, cache = true
+// While parent closed → forge.close("Child") → cache updates to false
+// Open parent → child stays closed (cache was false)
+
+// Parent open, Child open → close parent → child closes, cache = true
+// While parent closed → forge.open("Child") → cache updates to true
+// Open parent → child reopens (cache was true)
+```
+
+---
+
 ## ForgeContext & useForgeContext
 
 Forge exposes a Vide context that lets any component deep in your tree access `props` and `forge` without prop drilling.
 
-### Setup
+### Setting up the Provider
 
 In your app's `render()`, wrap child components with a `Provider`:
 
 ```ts
-import { App, Args, Fade, ForgeContext } from "@rbxts/forge";
+import AppForge, { Args, App, Fade, ForgeContext } from "@rbxts/forge";
 import Vide, { Provider } from "@rbxts/vide";
 
 @Fade(0.25)
-@App({ name: "Fade", group: "Rules", visible: true })
-export default class Template extends Args {
+@App({ name: "Inventory", group: "HUD", visible: true })
+export default class Inventory extends Args {
     render() {
         const { px } = this.props;
         return (
-            <frame Size={() => UDim2.fromOffset(px(200), px(200))}>
+            <frame Size={() => UDim2.fromOffset(px(400), px(300))}>
                 <Provider context={ForgeContext} value={this}>
-                    {() => (
-                        <>
-                            <TestComponent />
-                        </>
-                    )}
+                    {() => <TooltipButton />}
                 </Provider>
             </frame>
         );
@@ -173,83 +229,39 @@ export default class Template extends Args {
 }
 ```
 
-The `value={this}` passes the entire app instance — giving all children access to `props` and `forge`.
+`value={this}` passes the entire app instance, giving all children access to `props` and `forge`.
 
 ### Consuming the Context
 
-In any child component, call `useForgeContext()` to retrieve `props` and `forge`:
+In any child component, call `useForgeContext()`:
 
 ```ts
 import { useForgeContext } from "@rbxts/forge";
 
-export function TestComponent() {
+export function TooltipButton() {
     const { props, forge } = useForgeContext();
     const { px } = props;
 
     return (
-        <frame
-            Size={() => UDim2.fromOffset(px(100), px(100))}
-            AnchorPoint={new Vector2(0.5, 0.5)}
-            Position={UDim2.fromScale(0.5, 0.5)}
+        <textbutton
+            Size={() => UDim2.fromOffset(px(100), px(40))}
+            Activated={() => forge.toggle("Tooltip", "HUD")}
         />
     );
 }
 ```
 
-`useForgeContext()` will throw a descriptive runtime error with a traceback if called outside of a `ForgeContext` provider, so misconfiguration is caught immediately.
-
-> This pattern is ideal for shared UI components that need `px` scaling or need to trigger `forge.open/close/toggle` without being tightly coupled to a specific app.
-
----
-
-## Exported Types
-
-Forge exports three convenience types from `types.d.ts` for use in your own files:
-
-```ts
-import type { ForgeProps, ClassProps, RenderProps } from "@rbxts/forge";
-```
-
-| Export | Full Type | Description |
-|--------|-----------|-------------|
-| `ForgeProps` | `Types.Props.Main` | The full props object passed to `render()` and `story()` — includes `props`, `forge`, `config`, and `renders` |
-| `ClassProps` | `Types.Props.Class` | What `this.props` looks like inside a component — your `AppProps` plus `px` and `screen` |
-| `RenderProps` | `Types.Render.Props` | The `renders` filter object accepted by `render()` and `story()` |
-
----
-
-## Forge Controller
-
-`this.forge` (and the `CreateForge` instance you create) exposes these methods:
-
-```ts
-forge.open("Child", "Rules")          // Set visibility to true
-forge.close("Child", "Rules")         // Set visibility to false
-forge.toggle("Child", "Rules")        // Flip current visibility
-forge.set("Child", "Rules", true)     // Set to an explicit boolean value
-
-// Bind an external Vide Source<boolean> to an app's visibility.
-// Useful for wiring UI-Labs story controls.
-forge.bind("Parent", "Rules", mySource)
-
-// Render registered apps into a Vide tree (used in-game)
-forge.render({ props, renders })
-
-// Render into a story container (used in UI-Labs)
-forge.story({ props, target, renders, config })
-```
-
-The `group` parameter defaults to `"None"` on all methods if omitted.
+`useForgeContext()` throws a descriptive runtime error with a traceback if called outside a `ForgeContext` provider.
 
 ---
 
 ## px & screen
 
-`px` and `screen` are injected into `this.props` automatically as part of `ClassProps`. You do **not** need to call `usePx()` manually — Forge initializes it internally when you call `render()` or `story()`.
+`px` and `screen` are injected into `this.props` automatically. You do **not** need to call `usePx()` manually — Forge initializes it internally when `render()` or `story()` is called.
 
 ### `px(value)`
 
-Scales a pixel value relative to the current viewport, using a base resolution of `1920×1080` and an equal blend of width/height scaling. Minimum scale defaults to `0.5`.
+Scales a pixel value relative to the current viewport using a base resolution of `1920×1080` and an equal blend of width/height scaling. Minimum scale defaults to `0.5`.
 
 ```ts
 const { px } = this.props;
@@ -263,68 +275,102 @@ px.ceil(200)    // math.ceil
 
 ### `screen`
 
-A reactive `Source<Vector2>` representing the **current size** of the render target (viewport or GuiObject). Updates automatically on resize.
+A reactive `Source<Vector2>` holding the **current size** of the render target. Updates automatically when the viewport or GuiObject resizes.
 
 ```ts
 const { screen } = this.props;
-
 screen() // → e.g. Vector2.new(1920, 1080)
 ```
 
 ---
 
-## `Config` (optional)
+## Config (optional)
 
-Both `render()` and `story()` accept an optional `config` object to override px defaults:
+Both `render()` and `story()` accept an optional `config` to override px defaults:
 
 ```ts
 type Config = {
     px?: {
-        target?: GuiObject | Camera   // defaults to Workspace.CurrentCamera
-        resolution?: Vector2          // defaults to Vector2.new(1920, 1080)
-        minScale?: number             // defaults to 0.5
+        target?: GuiObject | Camera  // defaults to Workspace.CurrentCamera
+        resolution?: Vector2         // defaults to Vector2.new(1920, 1080)
+        minScale?: number            // defaults to 0.5
     }
 }
 ```
 
 ---
 
-## `renders` Filter (optional)
+## renders Filter (optional)
 
-Both `render()` and `story()` accept an optional `renders` filter to control which registered apps are loaded. The type system enforces that `name`/`names` and `group`/`groups` are mutually exclusive — you can't pass both at once.
+Both `render()` and `story()` accept an optional `renders` filter to control which registered apps are loaded. `name`/`names` and `group`/`groups` are mutually exclusive in each pair — the type system enforces this.
 
 ```ts
-// Valid combinations:
-renders: { name: "Parent" }
-renders: { names: ["Parent", "Child"] }
-renders: { group: "Rules" }
-renders: { groups: ["Rules", "Other"] }
-renders: { name: "Parent", group: "Rules" }
-renders: { names: ["Parent"], groups: ["Rules"] }
-// ...and so on
+renders: { name: "Inventory" }
+renders: { names: ["Inventory", "Settings"] }
+renders: { group: "HUD" }
+renders: { groups: ["HUD", "Menus"] }
+renders: { name: "Inventory", group: "HUD" }
+renders: { names: ["Inventory", "Settings"], group: "HUD" }
 ```
 
 Omitting `renders` entirely loads **all** registered apps.
 
 ---
 
+## Logger
+
+Forge includes a built-in logger for debug output and render timing. Debug mode is **off by default** — all `debug` and `time` calls are silent in production.
+
+```ts
+import AppForge, { Logger } from "@rbxts/forge";
+
+Logger.setDebug(true); // enable before constructing AppForge
+```
+
+| Method | Always fires | Description |
+|--------|-------------|-------------|
+| `Logger.debug(context, message)` | No | Prints only when debug is enabled |
+| `Logger.warn(context, message)` | Yes | Always prints a warning |
+| `Logger.error(context, message)` | Yes | Always throws an error |
+| `Logger.time(context, name, fn)` | No | Times `fn` and prints result when debug is enabled |
+
+When debug is enabled, Forge automatically logs render timing for every app and total load time:
+
+```
+[Forge][Renders]: "HUD:Inventory" rendered in 0.0003s
+[Forge][Renders]: "HUD:Tooltip" rendered in 0.0001s
+[Forge][Renders]: Load completed in 0.0008s — 2 app(s) rendered
+```
+
+---
+
+## Exported Types
+
+```ts
+import type { ForgeProps, ClassProps, RenderProps } from "@rbxts/forge";
+```
+
+| Export | Description |
+|--------|-------------|
+| `ForgeProps` | Full props object for `render()` and `story()` — includes `props`, `forge`, `config`, `renders` |
+| `ClassProps` | What `this.props` looks like inside a component — your `AppProps` plus `px` and `screen` |
+| `RenderProps` | The `renders` filter object |
+
+---
+
 ## Rendering In-Game
 
 ```ts
-// controllers/app.ts
+// client/controllers/app.ts
 onInit() {
-    const props = this.createProps(Players.LocalPlayer!);
-    const forge = new CreateForge();
+    const forge = new AppForge();
+    const props = { player: Players.LocalPlayer } as AppProps;
 
     mount(() => (
-        <screengui Name={"App Tree"} ResetOnSpawn={false} IgnoreGuiInset>
-            <forge.render props={{ props, renders: { name: "Parent", group: "Rules" } }} />
+        <screengui Name="App Tree" ResetOnSpawn={false} IgnoreGuiInset>
+            <forge.render props={{ props, renders: { group: "HUD" } }} />
         </screengui>
     ), Players.LocalPlayer.WaitForChild("PlayerGui"));
-}
-
-public createProps(player: Player): AppProps {
-    return { player } as const satisfies AppProps;
 }
 ```
 
@@ -332,87 +378,76 @@ public createProps(player: Player): AppProps {
 
 ## UI-Labs / Stories
 
-Use `forge.story()` for previewing components in [UI-Labs](https://github.com/PepeElToro41/ui-labs) — a storybook plugin for Roblox that lets you visualize UI stories in real-time. You can find the plugin on the [Roblox Store](https://create.roblox.com/store/asset/14293316215/UI-Labs), and the roblox-ts utility package on [npm](https://www.npmjs.com/package/@rbxts/ui-labs).
+Use `forge.story()` for previewing components with [UI-Labs](https://github.com/PepeElToro41/ui-labs) — a storybook plugin for Roblox. Get the plugin on the [Roblox Store](https://create.roblox.com/store/asset/14293316215/UI-Labs) and the roblox-ts package on [npm](https://www.npmjs.com/package/@rbxts/ui-labs).
 
-### Shared Setup Component
+Forge exports a `Story` component you can use directly in your story files. It handles `AppForge` construction and the `forge.story()` call for you.
+
+> ⚠️ **`Flamework.addPaths()` must be a string literal** pointing to your apps folder and must be called before `Story` renders. Flamework transforms it at compile time — you cannot pass a dynamic string. This means it must live in your project, not inside the package.
+
+### Story Example
 
 ```ts
-// setup.tsx
-import { CreateForge, type RenderProps } from "@rbxts/forge";
-import Vide from "@rbxts/vide";
-import type { InferProps } from "@rbxts/ui-labs";
+// src/client/interface/stories/inventory.story.tsx
+import { Boolean, ControlGroup, CreateVideStory, type InferVideProps } from "@rbxts/ui-labs";
 import { Flamework } from "@flamework/core";
+import { Story } from "@rbxts/forge";
+import Vide from "@rbxts/vide";
 
-const mockedPlayer = {
-    Name: "UI-Labs",
-    UserId: 123456,
-} as const satisfies Partial<Player> as Player;
-
-// Must point to your apps folder so all decorators run before CreateForge is constructed
+// Must be a string literal — points to your apps folder
 Flamework.addPaths("src/client/interface/apps");
 
-export default function Setup<T extends InferProps<{}>>({
-    storyProps,
-    callback,
-    render,
-}: {
-    storyProps: T;
-    callback?: (props: AppProps, forge: CreateForge) => void;
-    render?: RenderProps;
-}) {
-    const forge = new CreateForge();
-    const props = { player: mockedPlayer } as AppProps;
-    if (callback) callback(props, forge);
-    return <forge.story props={props} target={storyProps.target} renders={render} />;
-}
-```
-
-> ⚠️ `Flamework.addPaths()` must run before `new CreateForge()` so all decorator registrations complete before the AppRegistry is consumed.
-
-### Writing a Story
-
-Use `forge.bind()` in the `callback` to wire UI-Labs boolean controls to app visibility:
-
-```ts
-// parent.story.tsx
-import { Boolean, ControlGroup, CreateVideStory, type InferVideProps } from "@rbxts/ui-labs";
-import Vide from "@rbxts/vide";
-import Setup from "../setup";
-
 const controls = {
-    Parent: ControlGroup({ visible: Boolean(true) }),
-    Child: ControlGroup({ visible: Boolean(false) }),
+    Inventory: ControlGroup({
+        visible: Boolean(true),
+    }),
+    Tooltip: ControlGroup({
+        visible: Boolean(false),
+    }),
 };
 
-const story = CreateVideStory({ vide: Vide, controls }, (props: InferVideProps<typeof controls>) => (
-    <Setup
-        storyProps={props}
-        render={{ name: "Parent", group: "Rules" }}
-        callback={(_, forge) => {
-            forge.bind("Parent", "Rules", props.controls.Parent.visible);
-            forge.bind("Child", "Rules", props.controls.Child.visible);
-        }}
-    />
-));
+const story = CreateVideStory(
+    { vide: Vide, controls },
+    (props: InferVideProps<typeof controls>) => (
+        <Story
+            target={props.target}
+            render={{ name: "Inventory", group: "HUD" }}
+            callback={(_, forge) => {
+                forge.bind("Inventory", "HUD", props.controls.Inventory.visible);
+                forge.bind("Tooltip", "HUD", props.controls.Tooltip.visible);
+            }}
+        />
+    ),
+);
 
 export = story;
 ```
 
+`forge.bind()` wires UI-Labs controls directly to app visibility. Rules still apply on top — so if `Inventory` closes while `Tooltip` is open, `ParentRule` will cache and close `Tooltip` correctly regardless of the bound control's value.
+
 ---
 
-## Full Example
+## Full Examples
 
-### Parent App
+### Root App with Fade
 
 ```ts
+// src/client/interface/apps/inventory.ts
+import AppForge, { App, Args, Fade } from "@rbxts/forge";
+import Vide, { spring } from "@rbxts/vide";
+
 @Fade(0.25)
-@App({ name: "Parent", group: "Rules", visible: true, rules: {} })
-export default class Parent extends Args {
+@App({
+    name: "Inventory",
+    group: "HUD",
+    visible: true,
+})
+export default class Inventory extends Args {
     render() {
         const { px } = this.props;
         const [position] = spring(
             () => UDim2.fromScale(0.5, this.source() ? 0.5 : 1.5),
-            1, 0.6,
+            1,
+            0.6,
         );
         return (
             <frame
@@ -427,7 +462,7 @@ export default class Parent extends Args {
                     AnchorPoint={new Vector2(0.5, 1)}
                     Position={() => new UDim2(0.5, 0, 1, -px(5))}
                     Size={() => UDim2.fromOffset(px(100), px(50))}
-                    Activated={() => this.forge.toggle("Child", "Rules")}
+                    Activated={() => this.forge.toggle("Tooltip", "HUD")}
                 >
                     <uicorner CornerRadius={() => new UDim(0, px(15))} />
                 </textbutton>
@@ -440,18 +475,26 @@ export default class Parent extends Args {
 ### Child App
 
 ```ts
-@Fade()
+// src/client/interface/apps/tooltip.ts
+import { ChildApp, ChildArgs } from "@rbxts/forge";
+import Vide, { spring } from "@rbxts/vide";
+
 @ChildApp({
-    name: "Child",
-    group: "Rules",
-    rules: { parent: "Parent", parentGroup: "Rules", anchor: true },
+    name: "Tooltip",
+    group: "HUD",
+    rules: {
+        parent: "Inventory",
+        parentGroup: "HUD",
+        anchor: true,
+    },
 })
-export default class Child extends ChildArgs {
+export default class Tooltip extends ChildArgs {
     render() {
         const { px } = this.props;
         const [position] = spring(
             () => UDim2.fromScale(this.source() ? 0 : 1, 0.5),
-            0.6, 0.8,
+            0.4,
+            0.8,
         );
         return (
             <frame
@@ -478,9 +521,10 @@ export default class Child extends ChildArgs {
 
 ## Notes
 
-- `global.d.ts` with `AppGroups`, `AppNames`, and `AppProps` is **required** — the package will not work without it.
-- App `name + group` combinations must be **globally unique**. Forge throws a runtime error on duplicate registration.
-- `exclusiveGroup` in `rules` is **experimental** and may produce unexpected behavior.
+- `global.d.ts` with `AppGroups`, `AppNames`, and `AppProps` is **required** — Forge will not work without it.
+- App `name + group` combinations must be **globally unique** — Forge throws a runtime error on duplicates.
+- Sources are only created for apps that are actually rendered — unrendered apps have no source and no rule effects.
+- `Flamework.addPaths()` must be a string literal in your project — it cannot be inside the package or passed as a variable.
 - A test folder is available in the repository for reference implementations.
 
 ---

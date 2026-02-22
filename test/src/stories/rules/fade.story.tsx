@@ -1,9 +1,10 @@
 // Package
 import { Boolean, CreateVideStory, type InferVideProps } from "@rbxts/ui-labs";
+import { Flamework } from "@flamework/core";
+import { Story } from "@rbxts/forge";
 import Vide from "@rbxts/vide";
 
-// Dependencies
-import Setup from "../setup";
+Flamework.addPaths("src/client/interface/apps");
 
 const controls = {
 	visible: Boolean(true),
@@ -15,8 +16,8 @@ const story = CreateVideStory(
 		controls,
 	},
 	(props: InferVideProps<typeof controls>) => (
-		<Setup
-			storyProps={props}
+		<Story
+			target={props.target}
 			render={{
 				name: "Fade",
 				group: "Rules",

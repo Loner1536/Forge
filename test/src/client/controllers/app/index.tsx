@@ -3,14 +3,13 @@ import { Players } from "@rbxts/services";
 
 // Packages
 import { Controller, OnInit } from "@flamework/core";
-import { CreateForge } from "@rbxts/forge";
 import Vide, { mount } from "@rbxts/vide";
-
+import AppForge from "@rbxts/forge";
 @Controller({ loadOrder: 1 })
 export default class AppController implements OnInit {
 	onInit() {
 		const props = this.createProps(Players.LocalPlayer!);
-		const forge = new CreateForge();
+		const forge = new AppForge();
 
 		mount(() => {
 			return (

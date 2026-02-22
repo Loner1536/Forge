@@ -1,37 +1,42 @@
+// Packages
+import { effect, untrack } from "@rbxts/vide";
+
 // Types
-import type AppForge from "@root/forge";
-import type Types from "@root/types";
+import type { AppForge } from "@root/forge";
 
 // Rules
-import ExclusiveGroupRule from "./checks/exclusiveGroup";
 import ParentRule from "./checks/parent";
 
+// Components
+import { AppRegistry } from "@registries/apps";
+
 // Helpers
-import getAppEntry from "@helpers/getAppEntry";
+import hasAppSource from "@helpers/hasAppSource";
+import getAppSource from "@helpers/getAppSource";
 
 export default class Rules {
-	protected processing = new Set<AppNames>();
+	protected processing = new Set<string>();
 
-	protected renderRules(name: AppNames, group: AppGroups = "None", props: Types.Props.Main) {
-		const entry = getAppEntry(name, group);
-		if (!entry) {
-			error(`renderRules: App Entry name "${name}" group "${group}" not registered`, 2);
-		}
-
-		const rules = entry.rules;
-		if (!rules) return;
+	protected setupRuleEffects(forge: AppForge) {
+		AppRegistry.forEach((entryMap, name) => {
+			entryMap.forEach((_, group) => {
+				if (!hasAppSource(name, group)) return;
+				effect(() => {
+					getAppSource(name, group)();
+					untrack(() => this.checkRules(forge, name, group));
+				});
+			});
+		});
 	}
 
 	protected checkRules(forge: AppForge, name: AppNames, group: AppGroups) {
-		if (this.processing.has(name)) return;
-
-		this.processing.add(name);
-
+		const key = `${name}:${group}`;
+		if (this.processing.has(key)) return;
+		this.processing.add(key);
 		try {
-			ParentRule(name, group);
-			ExclusiveGroupRule(forge, name, group);
+			ParentRule(forge, name, group);
 		} finally {
-			this.processing.delete(name);
+			this.processing.delete(key);
 		}
 	}
 }

@@ -1,5 +1,5 @@
 // Packages
-import Vide, { apply, create } from "@rbxts/vide";
+import Vide, { apply, create, effect } from "@rbxts/vide";
 
 // Types
 import type Types from "@root/types";
@@ -7,37 +7,21 @@ import type Types from "@root/types";
 // Classes
 import Renders from "@root/renders";
 
-// Components
-import { AppRegistry } from "@registries/apps";
-
 // Helpers
-import bindAppSource from "@helpers/bindAppSource";
 import getAppSource from "@helpers/getAppSource";
-import hasAppSource from "@helpers/hasAppSource";
-import setAppSource from "@helpers/setAppSource";
-import getAppEntry from "@helpers/getAppEntry";
 
-export default class AppForge extends Renders {
+export class AppForge extends Renders {
 	constructor() {
 		super();
-
-		AppRegistry.forEach((entryMap, name) => {
-			entryMap.forEach((_, group) => {
-				this.createSource(name, group);
-			});
-		});
 	}
 
-	private createSource(name: AppNames, group: AppGroups = "None") {
-		const entry = getAppEntry(name, group);
-		if (!entry) return;
-
-		if (hasAppSource(name, group)) return;
-
-		setAppSource(name, group, entry.visible ?? false);
-	}
 	public bind(name: AppNames, group: AppGroups = "None", value: Vide.Source<boolean>) {
-		bindAppSource(name, group, value);
+		const src = getAppSource(name, group);
+		if (!src) return;
+
+		effect(() => {
+			src(value());
+		});
 	}
 
 	// TODO: make a separate files for rules
@@ -49,8 +33,6 @@ export default class AppForge extends Renders {
 		if (prev === value) return;
 
 		src(value);
-
-		this.checkRules(this, name, group);
 	}
 
 	public open(name: AppNames, group: AppGroups = "None") {
@@ -86,7 +68,7 @@ export default class AppForge extends Renders {
 		});
 
 		apply(Container as Instance)({
-			[0]: this.Initalize({
+			[0]: this.Initialize({
 				props,
 				forge: this,
 				renders,
@@ -99,9 +81,12 @@ export default class AppForge extends Renders {
 			}),
 		});
 
+		this.setupRuleEffects(this);
 		return Container;
 	};
 	render = ({ props }: { props: Omit<Types.Props.Main, "forge"> }) => {
-		return this.Initalize({ ...props, forge: this });
+		const instances = this.Initialize({ ...props, forge: this });
+		this.setupRuleEffects(this);
+		return instances;
 	};
 }

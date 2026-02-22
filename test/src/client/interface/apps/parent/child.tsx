@@ -1,8 +1,7 @@
 // Packages
-import { ChildApp, ChildArgs, Fade } from "@rbxts/forge";
+import { ChildApp, ChildArgs } from "@rbxts/forge";
 import Vide, { spring } from "@rbxts/vide";
 
-@Fade()
 @ChildApp({
 	name: "Child",
 	group: "Rules",
@@ -22,7 +21,7 @@ export default class Child extends ChildArgs {
 				const xScale = this.source() ? 0 : 1;
 				return UDim2.fromScale(xScale, 0.5);
 			},
-			0.6,
+			0.4,
 			0.8,
 		);
 

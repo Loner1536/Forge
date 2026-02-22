@@ -1,8 +1,7 @@
 // Packages
-import { App, Args, Fade } from "@rbxts/forge";
+import { App, Args } from "@rbxts/forge";
 import Vide, { spring } from "@rbxts/vide";
 
-@Fade(0.25)
 @App({
 	name: "Parent",
 	group: "Rules",
