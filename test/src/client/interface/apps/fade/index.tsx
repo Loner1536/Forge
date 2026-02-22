@@ -2,6 +2,7 @@
 import { App, Args, Fade } from "@rbxts/forge";
 import Vide, { spring } from "@rbxts/vide";
 
+// Components
 @Fade(0.25)
 @App({
 	name: "Fade",

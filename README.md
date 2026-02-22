@@ -141,6 +141,67 @@ Both expose the following on `this`:
 
 ---
 
+## ForgeContext & useForgeContext
+
+Forge exposes a Vide context that lets any component deep in your tree access `props` and `forge` without prop drilling.
+
+### Setup
+
+In your app's `render()`, wrap child components with a `Provider`:
+
+```ts
+import { App, Args, Fade, ForgeContext } from "@rbxts/forge";
+import Vide, { Provider } from "@rbxts/vide";
+
+@Fade(0.25)
+@App({ name: "Fade", group: "Rules", visible: true })
+export default class Template extends Args {
+    render() {
+        const { px } = this.props;
+        return (
+            <frame Size={() => UDim2.fromOffset(px(200), px(200))}>
+                <Provider context={ForgeContext} value={this}>
+                    {() => (
+                        <>
+                            <TestComponent />
+                        </>
+                    )}
+                </Provider>
+            </frame>
+        );
+    }
+}
+```
+
+The `value={this}` passes the entire app instance — giving all children access to `props` and `forge`.
+
+### Consuming the Context
+
+In any child component, call `useForgeContext()` to retrieve `props` and `forge`:
+
+```ts
+import { useForgeContext } from "@rbxts/forge";
+
+export function TestComponent() {
+    const { props, forge } = useForgeContext();
+    const { px } = props;
+
+    return (
+        <frame
+            Size={() => UDim2.fromOffset(px(100), px(100))}
+            AnchorPoint={new Vector2(0.5, 0.5)}
+            Position={UDim2.fromScale(0.5, 0.5)}
+        />
+    );
+}
+```
+
+`useForgeContext()` will throw a descriptive runtime error with a traceback if called outside of a `ForgeContext` provider, so misconfiguration is caught immediately.
+
+> This pattern is ideal for shared UI components that need `px` scaling or need to trigger `forge.open/close/toggle` without being tightly coupled to a specific app.
+
+---
+
 ## Exported Types
 
 Forge exports three convenience types from `types.d.ts` for use in your own files:
