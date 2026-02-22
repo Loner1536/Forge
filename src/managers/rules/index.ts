@@ -3,12 +3,10 @@ import type AppForge from "@root/forge";
 import type Types from "@root/types";
 
 // Rules
-import ExclusiveGroupRule from "./check/exclusiveGroup";
-import AnchorRule from "./render/anchor";
-import ParentRule from "./check/parent";
+import ExclusiveGroupRule from "./checks/exclusiveGroup";
+import ParentRule from "./checks/parent";
 
 // Helpers
-import isChildAppRules from "@helpers/isChildAppRules";
 import getAppEntry from "@helpers/getAppEntry";
 
 export default class Rules {
@@ -22,15 +20,6 @@ export default class Rules {
 
 		const rules = entry.rules;
 		if (!rules) return;
-
-		// Parent Anchor
-		if (isChildAppRules(rules) && rules.anchor) AnchorRule(name, group, props);
-
-		// Index
-		if (rules.zIndex !== undefined) {
-			// TODO: will be a separate file under ruleEngine
-			// forge.index(name, rules.zIndex);
-		}
 	}
 
 	protected checkRules(forge: AppForge, name: AppNames, group: AppGroups) {

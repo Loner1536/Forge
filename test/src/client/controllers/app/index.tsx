@@ -15,7 +15,7 @@ export default class AppController implements OnInit {
 		mount(() => {
 			return (
 				<screengui Name={"App Tree"} ResetOnSpawn={false} IgnoreGuiInset>
-					<forge.render props={{ props, renders: { name: "Fade", group: "Rules" } }} />
+					<forge.render props={{ props, renders: { name: "Parent", group: "Rules" } }} />
 				</screengui>
 			);
 		}, Players.LocalPlayer.WaitForChild("PlayerGui"));

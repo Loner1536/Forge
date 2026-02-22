@@ -2,7 +2,7 @@
 import { Workspace } from "@rbxts/services";
 
 // Packages
-import Vide, { apply, effect, spring } from "@rbxts/vide";
+import Vide, { apply, spring } from "@rbxts/vide";
 
 // Types
 import type Types from "@root/types";
@@ -54,34 +54,9 @@ export default class Renders extends Rules {
 
 		return this.Load(props);
 	}
+
 	private Load(props: Types.Props.Main) {
-		const baseEntries = this.collectEntries(props.renders);
-		const toLoad = this.expandWithChildren(baseEntries);
-
-		const load: Instance[] = [];
-
-		toLoad.forEach((entry) => {
-			const name = entry.name;
-			const group = entry.group ?? "None";
-
-			print("Loading render for", name, group);
-
-			const render = this.createInstance(props, name, group);
-
-			if (!render) return;
-
-			if (!isChildAppRules(entry.rules)) {
-				load.push(render.container);
-			}
-		});
-
-		return load;
-	}
-
-	private collectEntries(
-		renders?: Types.Render.Props,
-	): (Types.Decorator.Entry | Types.Decorator.ChildEntry)[] {
-		const result: (Types.Decorator.Entry | Types.Decorator.ChildEntry)[] = [];
+		const renders = props.renders;
 
 		const names =
 			renders?.name !== undefined
@@ -97,46 +72,56 @@ export default class Renders extends Rules {
 					? new Set(renders.groups)
 					: undefined;
 
-		const hasNameFilter = names !== undefined;
-		const hasGroupFilter = groups !== undefined;
+		const load: Instance[] = [];
+		const rendered = new Set<string>();
+
+		const renderEntry = (name: AppNames, group: AppGroups): Instance | undefined => {
+			const key = `${name}:${group}`;
+			if (rendered.has(key)) return;
+			rendered.add(key);
+
+			// Collect all direct child containers first before building this container
+			const childContainers: Instance[] = [];
+			AppRegistry.forEach((groupEntries) => {
+				groupEntries.forEach((childEntry, childGroup) => {
+					if (!isChildEntry(childEntry)) return;
+					if (childEntry.rules.parent !== name) return;
+					const childParentGroup = childEntry.rules.parentGroup ?? "None";
+					if (childParentGroup !== group) return;
+
+					const childContainer = renderEntry(childEntry.name, childGroup);
+					if (childContainer) childContainers.push(childContainer);
+				});
+			});
+
+			const render = this.createInstance(props, name, group, childContainers);
+			if (!render) return;
+
+			if (!isChildAppRules(getAppEntry(name, group)?.rules)) {
+				load.push(render.container);
+			}
+
+			return render.container;
+		};
 
 		AppRegistry.forEach((groupEntries, appName) => {
-			if (hasNameFilter && !names!.has(appName)) return;
-
 			groupEntries.forEach((entry, group) => {
-				if (hasGroupFilter && !groups!.has(group)) return;
-
-				result.push(entry);
+				if (isChildEntry(entry)) return;
+				if (names && !names.has(appName)) return;
+				if (groups && !groups.has(group)) return;
+				renderEntry(appName, group);
 			});
 		});
 
-		return result;
+		return load;
 	}
-	private expandWithChildren(
-		entries: (Types.Decorator.Entry | Types.Decorator.ChildEntry)[],
-	): (Types.Decorator.Entry | Types.Decorator.ChildEntry)[] {
-		const result = [...entries];
-		const selected = new Set(entries.map((e) => e.name));
-		const seen = new Set(entries.map((e) => `${e.name}:${e.group ?? "None"}`));
 
-		AppRegistry.forEach((groupEntries) => {
-			groupEntries.forEach((entry) => {
-				if (!isChildEntry(entry)) return;
-
-				const parent = entry.rules.parent;
-				if (!selected.has(parent)) return;
-
-				const key = `${entry.name}:${entry.group ?? "None"}`;
-				if (seen.has(key)) return;
-
-				seen.add(key);
-				result.push(entry);
-			});
-		});
-
-		return result;
-	}
-	private createInstance(props: Types.Props.Main, name: AppNames, group: AppGroups) {
+	private createInstance(
+		props: Types.Props.Main,
+		name: AppNames,
+		group: AppGroups,
+		childContainers: Instance[],
+	) {
 		const entry = getAppEntry(name, group);
 		if (!entry) return;
 
@@ -144,7 +129,6 @@ export default class Renders extends Rules {
 		let anchor: Instance | undefined;
 		let parentContainer: Instance | undefined;
 
-		print(entry);
 		if (isChildEntry(entry)) {
 			entryInstance = new entry.constructor(entry as never, props).render() as Instance;
 
@@ -154,8 +138,6 @@ export default class Renders extends Rules {
 				const parentEntry = parentMap.get(parentGroup);
 				if (parentEntry) parentContainer = parentEntry.container;
 			}
-
-			print(parentGroup, parentMap, entry.rules.anchor);
 
 			if (entry.rules.anchor) {
 				anchor = this.createAnchor(entry, props, entryInstance);
@@ -168,10 +150,9 @@ export default class Renders extends Rules {
 		if (entry.fade) {
 			const source = getAppSource(name, group);
 
-			print(anchor);
-
 			container = (
 				<FadeComponent
+					name={`${group}_${name}_Container`}
 					groupTransparency={
 						spring(() => (source() ? 0 : 1), entry.fade.period, entry.fade.dampeningRatio)[0]
 					}
@@ -179,22 +160,25 @@ export default class Renders extends Rules {
 					position={UDim2.fromScale(0.5, 0.5)}
 					size={UDim2.fromScale(1, 1)}
 					parent={parentContainer}
+					zIndex={isChildAppRules(entry.rules) ? (entry.zIndex ?? 0) : (entry?.zIndex ?? 1)}
 				>
 					{anchor ?? entryInstance}
+					{...childContainers}
 				</FadeComponent>
 			) as Instance;
 		} else {
-			print("No fade for", name, group);
 			container = (
 				<frame
-					Name={name}
+					Name={`${group}_${name}_Container`}
 					BackgroundTransparency={1}
 					AnchorPoint={new Vector2(0.5, 0.5)}
 					Position={UDim2.fromScale(0.5, 0.5)}
 					Size={UDim2.fromScale(1, 1)}
 					Parent={parentContainer}
+					ZIndex={isChildAppRules(entry.rules) ? (entry.zIndex ?? 0) : (entry?.zIndex ?? 1)}
 				>
 					{anchor ?? entryInstance}
+					{...childContainers}
 				</frame>
 			) as Instance;
 		}

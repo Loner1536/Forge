@@ -1,11 +1,14 @@
 // Packages
+import { App, Args, Fade } from "@rbxts/forge";
 import Vide, { spring } from "@rbxts/vide";
-import { App, Args } from "@rbxts/forge";
 
+@Fade(0.25)
 @App({
 	name: "Parent",
 	group: "Rules",
 	visible: true,
+
+	rules: {},
 })
 export default class Parent extends Args {
 	render() {
@@ -16,7 +19,7 @@ export default class Parent extends Args {
 				const yScale = this.source() ? 0.5 : 1.5;
 				return UDim2.fromScale(0.5, yScale);
 			},
-			0.4,
+			1,
 			0.6,
 		);
 

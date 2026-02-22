@@ -69,12 +69,10 @@ declare namespace Types {
 
 		export type App = {
 			exclusiveGroup?: AppGroups;
-			zIndex?: number;
 		};
 
 		export type ChildApp = {
 			exclusiveGroup?: AppGroups;
-			zIndex?: number;
 		} & WithParent;
 	}
 
@@ -111,6 +109,8 @@ declare namespace Types {
 			name: AppNames;
 			group?: AppGroups;
 			visible?: boolean;
+			zIndex?: number;
+
 			rules?: Rules.App;
 			fade?: Fade.Config;
 		};
@@ -120,6 +120,8 @@ declare namespace Types {
 			name: AppNames;
 			group?: AppGroups;
 			visible?: boolean;
+			zIndex?: number;
+
 			rules: Rules.ChildApp;
 			fade?: Fade.Config;
 		};
@@ -128,12 +130,16 @@ declare namespace Types {
 			name: N;
 			group?: AppGroups;
 			visible?: boolean;
+			zIndex?: number;
+
 			rules?: Rules.App;
 		};
 		export type ChildAppProps<N extends AppNames = AppNames> = {
 			name: N;
 			group?: AppGroups;
 			visible?: boolean;
+			zIndex?: number;
+
 			rules: Rules.ChildApp;
 		};
 	}

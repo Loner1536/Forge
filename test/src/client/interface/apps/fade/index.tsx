@@ -2,7 +2,7 @@
 import { App, Args, Fade } from "@rbxts/forge";
 import Vide, { spring } from "@rbxts/vide";
 
-@Fade()
+@Fade(0.25)
 @App({
 	name: "Fade",
 	group: "Rules",
@@ -17,8 +17,8 @@ export default class Template extends Args {
 				const yScale = this.source() ? 0.5 : 1.5;
 				return UDim2.fromScale(0.5, yScale);
 			},
-			0.4,
-			0.6,
+			0.5,
+			0.75,
 		);
 
 		return (

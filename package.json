@@ -1,13 +1,12 @@
 {
 	"name": "@rbxts/forge",
-	"version": "0.0.8-beta-9",
+	"version": "0.3.0",
 	"description": "An App Manager for Vide",
 	"main": "out/init.lua",
 	"types": "out/index.d.ts",
 	"packageManager": "bun@1.3.1",
 	"scripts": {
 		"compile": "rbxtsc",
-		"login": "bunx npm login --auth-type=legacy",
 		"compile-all": "bunx run compile && rm -rf test/node_modules/@rbxts/forge && cp -r out test/node_modules/@rbxts/forge"
 	},
 	"keywords": [

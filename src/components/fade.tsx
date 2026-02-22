@@ -1,6 +1,7 @@
 import Vide, { Derivable, read, source } from "@rbxts/vide";
 
 type FadeProps = {
+	name?: string;
 	groupColor?: Derivable<Color3>;
 	groupTransparency?: Derivable<number>;
 	anchor?: Derivable<Vector2>;
@@ -36,7 +37,7 @@ export default function FadeComponent(props: FadeProps) {
 
 	return (
 		<frame
-			Name="Transition"
+			Name={props.name ?? "Transition"}
 			BackgroundTransparency={1}
 			AnchorPoint={props.anchor}
 			Size={props.size || new UDim2(1, 0, 1, 0)}
