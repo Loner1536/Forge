@@ -39,25 +39,31 @@ export {};
 
 ### `AppForge` Namespace
 
-Forge injects a global `AppForge` namespace into your project automatically. It provides utility types so you never need to import anything from Vide just to annotate your `render()` method.
+Forge injects a global `AppForge` namespace into your project automatically. It provides utility types so you never need to import anything from Vide or Forge just to annotate your components.
 
 | Type | Description |
 |------|-------------|
-| `AppForge.Node` | The return type for `render()` in both `Args` and `ChildArgs` — equivalent to `JSX.Element` without needing to import it from Vide |
-
-Use `AppForge.Node` as the return type of every `render()` method:
+| `AppForge.Node` | Return type for `render()` in both `Args` and `ChildArgs` — equivalent to `JSX.Element` without needing to import it from Vide |
+| `AppForge.Props.Class` | The type of `this.props` inside any component — your `AppProps` plus the full `px` and `screen` utilities |
+| `AppForge.Props.Main` | Full props object passed to `render()` and `story()` — useful when building utilities around the render layer |
+| `AppForge.Props.Config` | The optional `config` object for overriding px defaults |
 
 ```ts
+// Typing render() — no Vide import needed
 export default class MyApp extends Args {
     render(): AppForge.Node {
         return <frame />;
     }
 }
+
+// Typing a standalone component that receives forwarded props
+function MyComponent(props: { appProps: AppForge.Props.Class }) {
+    const { px, screen } = props.appProps;
+}
+
+// Typing a utility that wraps the render layer
+function myHelper(props: AppForge.Props.Main, config?: AppForge.Props.Config) { ... }
 ```
-
-This gives you full JSX type-checking on your return value without any manual Vide imports.
-
----
 
 ## Decorators
 
