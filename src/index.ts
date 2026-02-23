@@ -1,6 +1,3 @@
-// References
-/// <reference path="./global.d.ts" />
-
 // Decorators
 export { App, Args, ChildApp, ChildArgs, Fade } from "@root/decorators";
 

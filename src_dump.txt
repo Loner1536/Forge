@@ -415,29 +415,6 @@ export class AppForge extends Renders {
 
 ---
 
-src/global.d.ts
-
-```ts
-// Packages
-import type { Node } from "@rbxts/vide";
-
-declare global {
-	// These will be overridden by the user
-	// They are only placeholders for your build
-	type AppGroups = string;
-	type AppNames = string;
-	type AppProps = {};
-
-	// HELPERS FOR AUTOCOMPLETION TYPES
-	namespace AppForge {
-		type AppNode = Node;
-	}
-}
-export {};
-```
-
----
-
 src/helpers/getAppEntry.ts
 
 ```ts
@@ -756,9 +733,6 @@ export function usePx(target?: GuiObject | Camera, baseResolution?: Vector2, min
 src/index.ts
 
 ```ts
-// References
-/// <reference path="./global.d.ts" />
-
 // Decorators
 export { App, Args, ChildApp, ChildArgs, Fade } from "@root/decorators";
 
@@ -1324,7 +1298,30 @@ export default function Story({
 
 ---
 
-src/types.d.ts
+src/types/global.d.ts
+
+```ts
+// Packages
+import type { Node } from "@rbxts/vide";
+
+declare global {
+	// These will be overridden by the user
+	// They are only placeholders for your build
+	type AppGroups = string;
+	type AppNames = string;
+	type AppProps = {};
+
+	// HELPERS FOR AUTOCOMPLETION TYPES
+	namespace AppForge {
+		type AppNode = Node;
+	}
+}
+export {};
+```
+
+---
+
+src/types/index.d.ts
 
 ```ts
 // Types
@@ -1381,8 +1378,8 @@ declare namespace Types {
 		};
 
 		export type Class = AppProps & {
-			screen: typeof import("./hooks/usePx").screen;
-			px: typeof import("./hooks/usePx").px;
+			screen: typeof import("../hooks/usePx").screen;
+			px: typeof import("../hooks/usePx").px;
 		};
 	}
 
@@ -1475,6 +1472,14 @@ export type ClassProps = Types.Props.Class;
 export type RenderProps = Types.Render.Props;
 
 export default Types;
+```
+
+---
+
+src/types/references.d.ts
+
+```ts
+/// <reference path="./global.d.ts" />
 ```
 
 ---

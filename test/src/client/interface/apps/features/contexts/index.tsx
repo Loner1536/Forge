@@ -6,7 +6,7 @@ import Vide from "@rbxts/vide";
 	name: "Contexts",
 })
 export default class Contexts extends Args {
-	render(): AppForge.AppNode {
+	render(): AppForge.Node {
 		return <frame />;
 	}
 }

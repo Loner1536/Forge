@@ -37,6 +37,22 @@ export {};
 | `AppNames` | Union of every app/component name |
 | `AppProps` | Shared props passed to every component (e.g. `player`) |
 
+The package also exposes a global `AppForge` namespace with shared utility types:
+
+| Type | Description |
+|------|-------------|
+| `AppForge.AppNode` | The return type for `render()` — equivalent to `Vide.Node` |
+
+Use `AppForge.AppNode` as the return type of your `render()` method:
+
+```ts
+export default class MyApp extends Args {
+    render(): AppForge.AppNode {
+        return <frame />;
+    }
+}
+```
+
 ---
 
 ## Decorators
@@ -108,7 +124,7 @@ export default class MyApp extends Args { ... }
 
 ```ts
 export default class MyApp extends Args {
-    render(): Vide.Node { ... }
+    render(): AppForge.AppNode { ... }
 }
 ```
 
@@ -116,7 +132,7 @@ export default class MyApp extends Args {
 
 ```ts
 export default class MyChild extends ChildArgs {
-    render(): Vide.Node { ... }
+    render(): AppForge.AppNode { ... }
 }
 ```
 
@@ -201,26 +217,25 @@ This means the cache always represents **what the child wants to be** when the p
 
 ---
 
-## ForgeContext & useForgeContext
+## Contexts & useForgeContext
 
-Forge exposes a Vide context that lets any component deep in your tree access `props` and `forge` without prop drilling.
+Forge exposes two Vide contexts that let components deep in your tree access app data without prop drilling.
 
-### Setting up the Provider
+### `AppContext` — for root apps (`Args`)
 
-In your app's `render()`, wrap child components with a `Provider`:
+Use this inside apps decorated with `@App`. Set up a `Provider` in your `render()` and pass `this` as the value:
 
 ```ts
-import AppForge, { Args, App, Fade, ForgeContext } from "@rbxts/forge";
+import AppForge, { Args, App, Fade, AppContext } from "@rbxts/forge";
 import Vide, { Provider } from "@rbxts/vide";
 
 @Fade(0.25)
 @App({ name: "Inventory", group: "HUD", visible: true })
 export default class Inventory extends Args {
-    render() {
-        const { px } = this.props;
+    render(): AppForge.AppNode {
         return (
-            <frame Size={() => UDim2.fromOffset(px(400), px(300))}>
-                <Provider context={ForgeContext} value={this}>
+            <frame Size={UDim2.fromScale(1, 1)}>
+                <Provider context={AppContext} value={this}>
                     {() => <TooltipButton />}
                 </Provider>
             </frame>
@@ -229,17 +244,37 @@ export default class Inventory extends Args {
 }
 ```
 
-`value={this}` passes the entire app instance, giving all children access to `props` and `forge`.
+### `ChildAppContext` — for child apps (`ChildArgs`)
 
-### Consuming the Context
+Use this inside apps decorated with `@ChildApp` when you need to expose `parentSource` to descendants:
 
-In any child component, call `useForgeContext()`:
+```ts
+import { ChildArgs, ChildApp, ChildAppContext } from "@rbxts/forge";
+import Vide, { Provider } from "@rbxts/vide";
+
+@ChildApp({ name: "Tooltip", group: "HUD", rules: { parent: "Inventory", parentGroup: "HUD" } })
+export default class Tooltip extends ChildArgs {
+    render(): AppForge.AppNode {
+        return (
+            <frame>
+                <Provider context={ChildAppContext} value={this}>
+                    {() => <TooltipContent />}
+                </Provider>
+            </frame>
+        );
+    }
+}
+```
+
+### `useForgeContext()` — consuming root app context
+
+Call inside any component nested under an `AppContext` provider:
 
 ```ts
 import { useForgeContext } from "@rbxts/forge";
 
 export function TooltipButton() {
-    const { props, forge } = useForgeContext();
+    const { props, forge, source, name, group } = useForgeContext();
     const { px } = props;
 
     return (
@@ -251,7 +286,29 @@ export function TooltipButton() {
 }
 ```
 
-`useForgeContext()` throws a descriptive runtime error with a traceback if called outside a `ForgeContext` provider.
+### `useChildForgeContext()` — consuming child app context
+
+Call inside any component nested under a `ChildAppContext` provider:
+
+```ts
+import { useChildForgeContext } from "@rbxts/forge";
+
+export function TooltipContent() {
+    const { props, forge, source, parentSource } = useChildForgeContext();
+    const { px } = props;
+
+    return (
+        <frame Size={() => UDim2.fromOffset(px(200), px(100))} />
+    );
+}
+```
+
+Both hooks throw a descriptive runtime error with a traceback if called outside their respective provider.
+
+| Hook | Context | Returns |
+|------|---------|---------|
+| `useForgeContext()` | `AppContext` | `forge`, `props`, `source`, `name`, `group` |
+| `useChildForgeContext()` | `ChildAppContext` | `forge`, `props`, `source`, `name`, `group`, `parentSource` |
 
 ---
 
@@ -358,6 +415,27 @@ import type { ForgeProps, ClassProps, RenderProps } from "@rbxts/forge";
 
 ---
 
+## Exports Reference
+
+```ts
+import AppForge, {
+    // Decorators
+    App, ChildApp, Fade,
+    // Base classes
+    Args, ChildArgs,
+    // Contexts
+    AppContext, ChildAppContext,
+    // Hooks
+    useForgeContext, useChildForgeContext,
+    // Story component
+    Story,
+    // Logger
+    Logger,
+} from "@rbxts/forge";
+```
+
+---
+
 ## Rendering In-Game
 
 ```ts
@@ -428,12 +506,12 @@ export = story;
 
 ## Full Examples
 
-### Root App with Fade
+### Root App with Fade and Context
 
 ```ts
 // src/client/interface/apps/inventory.ts
-import AppForge, { App, Args, Fade } from "@rbxts/forge";
-import Vide, { spring } from "@rbxts/vide";
+import AppForge, { App, Args, Fade, AppContext } from "@rbxts/forge";
+import Vide, { Provider, spring } from "@rbxts/vide";
 
 @Fade(0.25)
 @App({
@@ -442,7 +520,7 @@ import Vide, { spring } from "@rbxts/vide";
     visible: true,
 })
 export default class Inventory extends Args {
-    render() {
+    render(): AppForge.AppNode {
         const { px } = this.props;
         const [position] = spring(
             () => UDim2.fromScale(0.5, this.source() ? 0.5 : 1.5),
@@ -456,19 +534,28 @@ export default class Inventory extends Args {
                 Position={position}
                 ZIndex={10}
             >
-                <uicorner CornerRadius={() => new UDim(0, px(15))} />
-                <textbutton
-                    BackgroundColor3={Color3.fromRGB(30, 30, 30)}
-                    AnchorPoint={new Vector2(0.5, 1)}
-                    Position={() => new UDim2(0.5, 0, 1, -px(5))}
-                    Size={() => UDim2.fromOffset(px(100), px(50))}
-                    Activated={() => this.forge.toggle("Tooltip", "HUD")}
-                >
-                    <uicorner CornerRadius={() => new UDim(0, px(15))} />
-                </textbutton>
+                <Provider context={AppContext} value={this}>
+                    {() => <TooltipButton />}
+                </Provider>
             </frame>
         );
     }
+}
+
+function TooltipButton() {
+    const { forge, props } = useForgeContext();
+    const { px } = props;
+    return (
+        <textbutton
+            BackgroundColor3={Color3.fromRGB(30, 30, 30)}
+            AnchorPoint={new Vector2(0.5, 1)}
+            Position={() => new UDim2(0.5, 0, 1, -px(5))}
+            Size={() => UDim2.fromOffset(px(100), px(50))}
+            Activated={() => forge.toggle("Tooltip", "HUD")}
+        >
+            <uicorner CornerRadius={() => new UDim(0, px(15))} />
+        </textbutton>
+    );
 }
 ```
 
@@ -489,7 +576,7 @@ import Vide, { spring } from "@rbxts/vide";
     },
 })
 export default class Tooltip extends ChildArgs {
-    render() {
+    render(): AppForge.AppNode {
         const { px } = this.props;
         const [position] = spring(
             () => UDim2.fromScale(this.source() ? 0 : 1, 0.5),
@@ -525,6 +612,7 @@ export default class Tooltip extends ChildArgs {
 - App `name + group` combinations must be **globally unique** — Forge throws a runtime error on duplicates.
 - Sources are only created for apps that are actually rendered — unrendered apps have no source and no rule effects.
 - `Flamework.addPaths()` must be a string literal in your project — it cannot be inside the package or passed as a variable.
+- Use `AppContext` with `useForgeContext()` for root apps, and `ChildAppContext` with `useChildForgeContext()` for child apps — mixing them will throw a runtime error.
 - A test folder is available in the repository for reference implementations.
 
 ---
