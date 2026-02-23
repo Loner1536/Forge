@@ -1,6 +1,6 @@
 declare global {
-	type AppGroups = "Rules";
-	type AppNames = "Parent" | "Child" | "Fade";
+	type AppGroups = "Rule" | "Feature";
+	type AppNames = "Parent" | "Child" | "Fade" | "Contexts";
 	type AppProps = {
 		player: Player;
 	};

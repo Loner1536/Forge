@@ -1,3 +1,6 @@
+// References
+/// <reference path="./global.d.ts" />
+
 // Decorators
 export { App, Args, ChildApp, ChildArgs, Fade } from "@root/decorators";
 
@@ -17,7 +20,8 @@ export type {
 // Story
 export { default as Story } from "@root/story";
 
-export { default as useForgeContext } from "@hooks/useForgeContext";
-export { default as ForgeContext } from "@root/appContext";
+export { AppContext, ChildAppContext } from "@root/contexts";
+export { default as useForgeContext } from "@hooks/useAppContext";
+export { default as useChildForgeContext } from "@hooks/useChildAppContext";
 
 export default AppForge;

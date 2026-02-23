@@ -38,7 +38,7 @@ abstract class BaseArgs {
 		};
 	}
 
-	abstract render(): Vide.Node;
+	abstract render(): AppForge.AppNode;
 }
 
 export abstract class Args extends BaseArgs {

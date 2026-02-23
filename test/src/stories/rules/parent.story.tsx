@@ -4,6 +4,9 @@ import { Story, Logger } from "@rbxts/forge";
 import { Flamework } from "@flamework/core";
 import Vide from "@rbxts/vide";
 
+// Dependencies
+import createProps from "@client/controllers/app/createProps";
+
 Flamework.addPaths("src/client/interface/apps");
 
 Logger.setDebug(true);
@@ -24,14 +27,15 @@ const story = CreateVideStory(
 	},
 	(props: InferVideProps<typeof controls>) => (
 		<Story
+			props={createProps()}
 			target={props.target}
 			render={{
 				name: "Parent",
-				group: "Rules",
+				group: "Rule",
 			}}
 			callback={(_, forge) => {
-				forge.bind("Parent", "Rules", props.controls.Parent.visible);
-				forge.bind("Child", "Rules", props.controls.Child.visible);
+				forge.bind("Parent", "Rule", props.controls.Parent.visible);
+				forge.bind("Child", "Rule", props.controls.Child.visible);
 			}}
 		/>
 	),

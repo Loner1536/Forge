@@ -25,11 +25,11 @@ const story = CreateVideStory(
 			props={createProps()}
 			target={props.target}
 			render={{
-				name: "Fade",
-				group: "Rule",
+				name: "Contexts",
+				group: "Feature",
 			}}
 			callback={(_, forge) => {
-				forge.bind("Fade", "Rule", props.controls.visible);
+				forge.bind("Contexts", "Feature", props.controls.visible);
 			}}
 		/>
 	),

@@ -5,28 +5,22 @@ import { Players } from "@rbxts/services";
 import { Controller, OnInit } from "@flamework/core";
 import Vide, { mount } from "@rbxts/vide";
 import AppForge from "@rbxts/forge";
+
+// Dependencies
+import createProps from "./createProps";
+
 @Controller({ loadOrder: 1 })
 export default class AppController implements OnInit {
 	onInit() {
-		const props = this.createProps(Players.LocalPlayer!);
+		const props = createProps();
 		const forge = new AppForge();
 
 		mount(() => {
 			return (
 				<screengui Name={"App Tree"} ResetOnSpawn={false} IgnoreGuiInset>
-					<forge.render props={{ props, renders: { name: "Parent", group: "Rules" } }} />
+					<forge.render props={{ props, renders: { name: "Parent", group: "Rule" } }} />
 				</screengui>
 			);
 		}, Players.LocalPlayer.WaitForChild("PlayerGui"));
-	}
-
-	public createProps(player: Player) {
-		const local_player = Players.LocalPlayer ?? player;
-
-		if (!player) error("No LocalPlayer nor MockedPlayer found for AppController props");
-
-		return {
-			player: local_player,
-		} as const satisfies AppProps;
 	}
 }
