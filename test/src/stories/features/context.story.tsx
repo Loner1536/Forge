@@ -1,5 +1,5 @@
 // Package
-import { Boolean, CreateVideStory, type InferVideProps } from "@rbxts/ui-labs";
+import { Boolean, ControlGroup, CreateVideStory, type InferVideProps } from "@rbxts/ui-labs";
 import { Story, Logger } from "@rbxts/forge";
 import { Flamework } from "@flamework/core";
 import Vide from "@rbxts/vide";
@@ -12,7 +12,12 @@ Flamework.addPaths("src/client/interface/apps");
 Logger.setDebug(true);
 
 const controls = {
-	visible: Boolean(true),
+	Parent: ControlGroup({
+		visible: Boolean(true),
+	}),
+	Child: ControlGroup({
+		visible: Boolean(false),
+	}),
 };
 
 const story = CreateVideStory(
@@ -25,11 +30,12 @@ const story = CreateVideStory(
 			props={createProps()}
 			target={props.target}
 			render={{
-				name: "Contexts",
+				name: "Context",
 				group: "Feature",
 			}}
 			callback={(_, forge) => {
-				forge.bind("Contexts", "Feature", props.controls.visible);
+				forge.bind("Context", "Feature", props.controls.Parent.visible);
+				forge.bind("ChildContext", "Feature", props.controls.Child.visible);
 			}}
 		/>
 	),

@@ -1,5 +1,5 @@
 {
-	"name": "rbxts-packages-test",
+	"name": "@rbxts/forge-test",
 	"emitLegacyScripts": false,
 	"globIgnorePaths": [
 		"**/jest.config.luau/**",
