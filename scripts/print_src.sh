@@ -7,4 +7,4 @@ find src -type f | sort | while read file; do
     echo ""
     echo "---"
     echo ""
-done > src_dump.txt
+done > src_dump.tmp

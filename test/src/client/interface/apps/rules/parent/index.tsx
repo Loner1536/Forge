@@ -1,6 +1,6 @@
 // Packages
-import { App, Args } from "@rbxts/forge";
 import Vide, { spring } from "@rbxts/vide";
+import { App, Args } from "@rbxts/forge";
 
 @App({
 	name: "Parent",
@@ -10,7 +10,7 @@ import Vide, { spring } from "@rbxts/vide";
 	rules: {},
 })
 export default class Parent extends Args {
-	render() {
+	render(): AppForge.Node {
 		const { px } = this.props;
 
 		const [position, _] = spring(

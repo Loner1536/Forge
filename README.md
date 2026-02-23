@@ -37,21 +37,25 @@ export {};
 | `AppNames` | Union of every app/component name |
 | `AppProps` | Shared props passed to every component (e.g. `player`) |
 
-The package also exposes a global `AppForge` namespace with shared utility types:
+### `AppForge` Namespace
+
+Forge injects a global `AppForge` namespace into your project automatically. It provides utility types so you never need to import anything from Vide just to annotate your `render()` method.
 
 | Type | Description |
 |------|-------------|
-| `AppForge.AppNode` | The return type for `render()` — equivalent to `Vide.Node` |
+| `AppForge.Node` | The return type for `render()` in both `Args` and `ChildArgs` — equivalent to `JSX.Element` without needing to import it from Vide |
 
-Use `AppForge.AppNode` as the return type of your `render()` method:
+Use `AppForge.Node` as the return type of every `render()` method:
 
 ```ts
 export default class MyApp extends Args {
-    render(): AppForge.AppNode {
+    render(): AppForge.Node {
         return <frame />;
     }
 }
 ```
+
+This gives you full JSX type-checking on your return value without any manual Vide imports.
 
 ---
 
@@ -124,7 +128,7 @@ export default class MyApp extends Args { ... }
 
 ```ts
 export default class MyApp extends Args {
-    render(): AppForge.AppNode { ... }
+    render(): AppForge.Node { ... }
 }
 ```
 
@@ -132,7 +136,7 @@ export default class MyApp extends Args {
 
 ```ts
 export default class MyChild extends ChildArgs {
-    render(): AppForge.AppNode { ... }
+    render(): AppForge.Node { ... }
 }
 ```
 
@@ -217,13 +221,13 @@ This means the cache always represents **what the child wants to be** when the p
 
 ---
 
-## Contexts & useForgeContext
+## Contexts & Hooks
 
 Forge exposes two Vide contexts that let components deep in your tree access app data without prop drilling.
 
 ### `AppContext` — for root apps (`Args`)
 
-Use this inside apps decorated with `@App`. Set up a `Provider` in your `render()` and pass `this` as the value:
+Use inside apps decorated with `@App`. Pass `this` as the `value` to give all descendants access to `forge`, `props`, `source`, `name`, and `group`:
 
 ```ts
 import AppForge, { Args, App, Fade, AppContext } from "@rbxts/forge";
@@ -232,7 +236,7 @@ import Vide, { Provider } from "@rbxts/vide";
 @Fade(0.25)
 @App({ name: "Inventory", group: "HUD", visible: true })
 export default class Inventory extends Args {
-    render(): AppForge.AppNode {
+    render(): AppForge.Node {
         return (
             <frame Size={UDim2.fromScale(1, 1)}>
                 <Provider context={AppContext} value={this}>
@@ -246,7 +250,7 @@ export default class Inventory extends Args {
 
 ### `ChildAppContext` — for child apps (`ChildArgs`)
 
-Use this inside apps decorated with `@ChildApp` when you need to expose `parentSource` to descendants:
+Use inside apps decorated with `@ChildApp` when descendants need access to `parentSource`:
 
 ```ts
 import { ChildArgs, ChildApp, ChildAppContext } from "@rbxts/forge";
@@ -254,7 +258,7 @@ import Vide, { Provider } from "@rbxts/vide";
 
 @ChildApp({ name: "Tooltip", group: "HUD", rules: { parent: "Inventory", parentGroup: "HUD" } })
 export default class Tooltip extends ChildArgs {
-    render(): AppForge.AppNode {
+    render(): AppForge.Node {
         return (
             <frame>
                 <Provider context={ChildAppContext} value={this}>
@@ -268,13 +272,13 @@ export default class Tooltip extends ChildArgs {
 
 ### `useForgeContext()` — consuming root app context
 
-Call inside any component nested under an `AppContext` provider:
+Call inside any component nested under an `AppContext` provider. Returns the full `Args` instance:
 
 ```ts
 import { useForgeContext } from "@rbxts/forge";
 
 export function TooltipButton() {
-    const { props, forge, source, name, group } = useForgeContext();
+    const { forge, props, source, name, group } = useForgeContext();
     const { px } = props;
 
     return (
@@ -288,13 +292,13 @@ export function TooltipButton() {
 
 ### `useChildForgeContext()` — consuming child app context
 
-Call inside any component nested under a `ChildAppContext` provider:
+Call inside any component nested under a `ChildAppContext` provider. Returns the full `ChildArgs` instance including `parentSource`:
 
 ```ts
 import { useChildForgeContext } from "@rbxts/forge";
 
 export function TooltipContent() {
-    const { props, forge, source, parentSource } = useChildForgeContext();
+    const { forge, props, source, parentSource } = useChildForgeContext();
     const { px } = props;
 
     return (
@@ -520,7 +524,7 @@ import Vide, { Provider, spring } from "@rbxts/vide";
     visible: true,
 })
 export default class Inventory extends Args {
-    render(): AppForge.AppNode {
+    render(): AppForge.Node {
         const { px } = this.props;
         const [position] = spring(
             () => UDim2.fromScale(0.5, this.source() ? 0.5 : 1.5),
@@ -534,15 +538,16 @@ export default class Inventory extends Args {
                 Position={position}
                 ZIndex={10}
             >
+                <uicorner CornerRadius={() => new UDim(0, px(15))} />
                 <Provider context={AppContext} value={this}>
-                    {() => <TooltipButton />}
+                    {() => <ToggleButton />}
                 </Provider>
             </frame>
         );
     }
 }
 
-function TooltipButton() {
+function ToggleButton() {
     const { forge, props } = useForgeContext();
     const { px } = props;
     return (
@@ -576,7 +581,7 @@ import Vide, { spring } from "@rbxts/vide";
     },
 })
 export default class Tooltip extends ChildArgs {
-    render(): AppForge.AppNode {
+    render(): AppForge.Node {
         const { px } = this.props;
         const [position] = spring(
             () => UDim2.fromScale(this.source() ? 0 : 1, 0.5),

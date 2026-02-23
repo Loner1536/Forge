@@ -10,7 +10,7 @@ import Vide, { spring } from "@rbxts/vide";
 	visible: true,
 })
 export default class Template extends Args {
-	render() {
+	render(): AppForge.Node {
 		const { px } = this.props;
 
 		const [position, _] = spring(
