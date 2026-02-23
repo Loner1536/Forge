@@ -1,10 +1,12 @@
 // Package
 import { Boolean, ControlGroup, CreateVideStory, type InferVideProps } from "@rbxts/ui-labs";
+import { Story, Logger } from "@rbxts/forge";
 import { Flamework } from "@flamework/core";
-import { Story } from "@rbxts/forge";
 import Vide from "@rbxts/vide";
 
 Flamework.addPaths("src/client/interface/apps");
+
+Logger.setDebug(true);
 
 const controls = {
 	Parent: ControlGroup({
