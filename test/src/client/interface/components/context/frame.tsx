@@ -1,5 +1,5 @@
 // Packages
-import { useForgeContext } from "@rbxts/forge";
+import { useAppContext } from "@rbxts/forge";
 import Vide, { spring } from "@rbxts/vide";
 
 export default function ContextFrame({
@@ -13,7 +13,7 @@ export default function ContextFrame({
 	position?: UDim2 | (() => UDim2);
 	children?: AppForge.Node;
 }) {
-	const { props, source } = useForgeContext();
+	const { props, source } = useAppContext();
 	const { px } = props;
 
 	return (

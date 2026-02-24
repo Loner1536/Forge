@@ -1,15 +1,13 @@
 // Package
 import { Boolean, CreateVideStory, type InferVideProps } from "@rbxts/ui-labs";
-import { Story, Logger } from "@rbxts/forge";
 import { Flamework } from "@flamework/core";
+import { Story } from "@rbxts/forge";
 import Vide from "@rbxts/vide";
 
 // Dependencies
 import createProps from "@client/controllers/app/createProps";
 
 Flamework.addPaths("src/client/interface/apps");
-
-Logger.setDebug(true);
 
 const controls = {
 	visible: Boolean(true),

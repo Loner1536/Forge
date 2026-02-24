@@ -13,6 +13,8 @@ import Vide, { spring } from "@rbxts/vide";
 	},
 })
 export default class Child extends ChildArgs {
+	public test = 1;
+
 	render(): AppForge.Node {
 		const { px } = this.props;
 
