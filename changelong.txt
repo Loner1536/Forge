@@ -1,0 +1,36 @@
+# Changelog
+
+## [0.4.1]
+
+### Added
+- Fixed an issue with global.d.ts not routing to the correct types.d.ts
+
+---
+
+## [0.4.0]
+
+### Added
+- Global `AppForge` namespace — injected automatically, no more importing from Vide/Forge just to annotate components (`AppForge.Node`, `AppForge.Props.Class`, `AppForge.Props.Main`, `AppForge.Props.Config`)
+- `MendArgs<T>` — extend apps with type-safe custom properties accessible anywhere via context hooks
+- `useAppContext<T>()` — replaces `useForgeContext()`, supports generic custom props merged into base context
+- `useChildAppContext<T>()` — replaces `useChildForgeContext()`, also supports custom prop generics
+- `debug` prop on `<Story />` — enable render timing logs directly in storybook
+
+---
+
+## [0.3.3]
+
+### Added
+- Decorator-driven UI apps & child apps via `@App` and `@ChildApp`
+- `@Fade` decorator for spring-driven transparency transitions via `CanvasGroup`
+- `Args` and `ChildArgs` base classes
+- `AppContext` and `ChildAppContext` Vide contexts
+- `useForgeContext()` and `useChildForgeContext()` hooks
+- Centralized visibility control via `forge.open`, `forge.close`, `forge.toggle`, `forge.bind`, `forge.set`
+- `ParentRule` — parent/child visibility caching and restoration
+- `px` and `screen` injected into `this.props` automatically
+- `renders` filter for `render()` and `story()`
+- `Logger` with debug mode, warnings, errors, and render timing
+- `global.d.ts` type system for `AppGroups`, `AppNames`, and `AppProps`
+- UI-Labs / storybook support via `forge.story()` and `Story` component
+- `ForgeProps`, `ClassProps`, `RenderProps` type exports

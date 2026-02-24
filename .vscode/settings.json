@@ -10,7 +10,7 @@
 
 		"node_modules": true,
 		"test": true,
-		"out": true,
+		"out": false,
 
 		".gitattributes": true,
 		".gitignore": true
