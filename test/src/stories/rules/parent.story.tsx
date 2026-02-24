@@ -35,6 +35,7 @@ const story = CreateVideStory(
 				forge.bind("Parent", "Rule", props.controls.Parent.visible);
 				forge.bind("Child", "Rule", props.controls.Child.visible);
 			}}
+			debug
 		/>
 	),
 );

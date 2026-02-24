@@ -166,6 +166,66 @@ Both expose the following on `this`:
 
 ---
 
+## MendArgs — Custom Properties
+
+`MendArgs` allows you to extend your apps with type-safe custom properties that can be accessed via context hooks.
+
+```ts
+import { App, Args, MendArgs } from "@rbxts/forge";
+
+// Define custom properties
+type CustomProps = {
+  color: Color3;
+  title: string;
+};
+
+@App({
+  name: "CustomApp",
+  group: "UI",
+})
+export default class CustomApp extends Args implements MendArgs<CustomProps> {
+  public color = Color3.fromRGB(255, 100, 100);
+  public title = "My Custom App";
+  
+  render(): AppForge.Node {
+    const { px } = this.props;
+    return (
+      <frame BackgroundColor3={this.color}>
+        <textlabel Text={this.title} TextSize={px(20)} />
+      </frame>
+    );
+  }
+}
+```
+
+### Accessing Custom Properties
+
+Access custom properties in child components using `useAppContext`:
+
+```tsx
+import { useAppContext } from "@rbxts/forge";
+
+type CustomProps = { 
+  color: Color3;
+  title: string;
+};
+
+function ChildComponent() {
+  const { color, title, props } = useAppContext<CustomProps>();
+  const { px } = props;
+  
+  return (
+    <frame BackgroundColor3={color}>
+      <textlabel Text={title} TextSize={px(16)} />
+    </frame>
+  );
+}
+```
+
+The generic parameter merges your custom properties with the base context properties (`forge`, `props`, `source`, `name`, `group`), giving you full type safety.
+
+---
+
 ## Forge Controller
 
 `this.forge` (and the `AppForge` instance you create) exposes these methods:
@@ -233,7 +293,7 @@ Forge exposes two Vide contexts that let components deep in your tree access app
 
 ### `AppContext` — for root apps (`Args`)
 
-Use inside apps decorated with `@App`. Pass `this` as the `value` to give all descendants access to `forge`, `props`, `source`, `name`, and `group`:
+Use inside apps decorated with `@App`. Pass `this` as the `value` to give all descendants access to `forge`, `props`, `source`, `name`, `group`, and any custom properties defined via `MendArgs`:
 
 ```ts
 import AppForge, { Args, App, Fade, AppContext } from "@rbxts/forge";
@@ -276,19 +336,24 @@ export default class Tooltip extends ChildArgs {
 }
 ```
 
-### `useForgeContext()` — consuming root app context
+### `useAppContext()` — consuming root app context
 
-Call inside any component nested under an `AppContext` provider. Returns the full `Args` instance:
+Call inside any component nested under an `AppContext` provider. Returns the full `Args` instance plus any custom properties:
 
 ```ts
-import { useForgeContext } from "@rbxts/forge";
+import { useAppContext } from "@rbxts/forge";
+
+type CustomProps = {
+  backgroundColor: Color3;
+};
 
 export function TooltipButton() {
-    const { forge, props, source, name, group } = useForgeContext();
+    const { forge, props, source, name, group, backgroundColor } = useAppContext<CustomProps>();
     const { px } = props;
 
     return (
         <textbutton
+            BackgroundColor3={backgroundColor}
             Size={() => UDim2.fromOffset(px(100), px(40))}
             Activated={() => forge.toggle("Tooltip", "HUD")}
         />
@@ -296,15 +361,15 @@ export function TooltipButton() {
 }
 ```
 
-### `useChildForgeContext()` — consuming child app context
+### `useChildAppContext()` — consuming child app context
 
 Call inside any component nested under a `ChildAppContext` provider. Returns the full `ChildArgs` instance including `parentSource`:
 
 ```ts
-import { useChildForgeContext } from "@rbxts/forge";
+import { useChildAppContext } from "@rbxts/forge";
 
 export function TooltipContent() {
-    const { forge, props, source, parentSource } = useChildForgeContext();
+    const { forge, props, source, parentSource } = useChildAppContext();
     const { px } = props;
 
     return (
@@ -317,8 +382,8 @@ Both hooks throw a descriptive runtime error with a traceback if called outside 
 
 | Hook | Context | Returns |
 |------|---------|---------|
-| `useForgeContext()` | `AppContext` | `forge`, `props`, `source`, `name`, `group` |
-| `useChildForgeContext()` | `ChildAppContext` | `forge`, `props`, `source`, `name`, `group`, `parentSource` |
+| `useAppContext<T>()` | `AppContext` | `forge`, `props`, `source`, `name`, `group`, + custom properties from `T` |
+| `useChildAppContext<T>()` | `ChildAppContext` | `forge`, `props`, `source`, `name`, `group`, `parentSource`, + custom properties from `T` |
 
 ---
 
@@ -414,7 +479,7 @@ When debug is enabled, Forge automatically logs render timing for every app and 
 ## Exported Types
 
 ```ts
-import type { ForgeProps, ClassProps, RenderProps } from "@rbxts/forge";
+import type { ForgeProps, ClassProps, RenderProps, StoryProps } from "@rbxts/forge";
 ```
 
 | Export | Description |
@@ -422,6 +487,7 @@ import type { ForgeProps, ClassProps, RenderProps } from "@rbxts/forge";
 | `ForgeProps` | Full props object for `render()` and `story()` — includes `props`, `forge`, `config`, `renders` |
 | `ClassProps` | What `this.props` looks like inside a component — your `AppProps` plus `px` and `screen` |
 | `RenderProps` | The `renders` filter object |
+| `StoryProps` | Props for the `Story` component |
 
 ---
 
@@ -430,13 +496,13 @@ import type { ForgeProps, ClassProps, RenderProps } from "@rbxts/forge";
 ```ts
 import AppForge, {
     // Decorators
-    App, ChildApp, Fade,
+    App, ChildApp, Fade, MendArgs,
     // Base classes
     Args, ChildArgs,
     // Contexts
     AppContext, ChildAppContext,
     // Hooks
-    useForgeContext, useChildForgeContext,
+    useAppContext, useChildAppContext,
     // Story component
     Story,
     // Logger
@@ -472,6 +538,18 @@ Forge exports a `Story` component you can use directly in your story files. It h
 
 > ⚠️ **`Flamework.addPaths()` must be a string literal** pointing to your apps folder and must be called before `Story` renders. Flamework transforms it at compile time — you cannot pass a dynamic string. This means it must live in your project, not inside the package.
 
+### Story Component Props
+
+```ts
+export interface StoryProps {
+    debug?: boolean;          // Enable debug logging (default: false)
+    props: AppProps;          // Your global app props
+    target: GuiObject;        // Target container for rendering
+    render?: RenderProps;     // Optional filter for which apps to render
+    callback?: (props: AppProps, forge: AppForge) => void; // Optional callback after render
+}
+```
+
 ### Story Example
 
 ```ts
@@ -497,8 +575,10 @@ const story = CreateVideStory(
     { vide: Vide, controls },
     (props: InferVideProps<typeof controls>) => (
         <Story
+            props={{ player: game.GetService("Players").LocalPlayer }}
             target={props.target}
             render={{ name: "Inventory", group: "HUD" }}
+            debug // Enable debug logging to see render times
             callback={(_, forge) => {
                 forge.bind("Inventory", "HUD", props.controls.Inventory.visible);
                 forge.bind("Tooltip", "HUD", props.controls.Tooltip.visible);
@@ -512,16 +592,28 @@ export = story;
 
 `forge.bind()` wires UI-Labs controls directly to app visibility. Rules still apply on top — so if `Inventory` closes while `Tooltip` is open, `ParentRule` will cache and close `Tooltip` correctly regardless of the bound control's value.
 
+When `debug` is enabled, you'll see render timing output in the console:
+
+```
+[Forge][Renders]: "HUD:Inventory" rendered in 0.0003s
+[Forge][Renders]: "HUD:Tooltip" rendered in 0.0001s
+[Forge][Renders]: Load completed in 0.0008s — 2 app(s) rendered
+```
+
 ---
 
 ## Full Examples
 
-### Root App with Fade and Context
+### Root App with Fade, Context, and Custom Properties
 
 ```ts
 // src/client/interface/apps/inventory.ts
-import AppForge, { App, Args, Fade, AppContext } from "@rbxts/forge";
-import Vide, { Provider, spring } from "@rbxts/vide";
+import AppForge, { App, Args, Fade, AppContext, MendArgs } from "@rbxts/forge";
+import Vide, { Provider, spring, source } from "@rbxts/vide";
+
+type InventoryProps = {
+    backgroundColor: Color3;
+};
 
 @Fade(0.25)
 @App({
@@ -529,7 +621,9 @@ import Vide, { Provider, spring } from "@rbxts/vide";
     group: "HUD",
     visible: true,
 })
-export default class Inventory extends Args {
+export default class Inventory extends Args implements MendArgs<InventoryProps> {
+    public backgroundColor = Color3.fromRGB(40, 40, 40);
+
     render(): AppForge.Node {
         const { px } = this.props;
         const [position] = spring(
@@ -539,6 +633,7 @@ export default class Inventory extends Args {
         );
         return (
             <frame
+                BackgroundColor3={this.backgroundColor}
                 Size={() => UDim2.fromOffset(px(200), px(200))}
                 AnchorPoint={new Vector2(0.5, 0.5)}
                 Position={position}
@@ -554,11 +649,11 @@ export default class Inventory extends Args {
 }
 
 function ToggleButton() {
-    const { forge, props } = useForgeContext();
+    const { forge, props, backgroundColor } = useAppContext<InventoryProps>();
     const { px } = props;
     return (
         <textbutton
-            BackgroundColor3={Color3.fromRGB(30, 30, 30)}
+            BackgroundColor3={backgroundColor}
             AnchorPoint={new Vector2(0.5, 1)}
             Position={() => new UDim2(0.5, 0, 1, -px(5))}
             Size={() => UDim2.fromOffset(px(100), px(50))}
@@ -570,7 +665,7 @@ function ToggleButton() {
 }
 ```
 
-### Child App
+### Child App with Anchor
 
 ```ts
 // src/client/interface/apps/tooltip.ts
@@ -601,6 +696,7 @@ export default class Tooltip extends ChildArgs {
                 AnchorPoint={new Vector2(1, 0.5)}
                 Position={position}
             >
+                <uicorner CornerRadius={() => new UDim(0, px(8))} />
                 <textbutton
                     BackgroundColor3={Color3.fromRGB(30, 30, 30)}
                     AnchorPoint={new Vector2(0.5, 1)}
@@ -608,6 +704,57 @@ export default class Tooltip extends ChildArgs {
                     Size={() => UDim2.fromOffset(px(100), px(50))}
                 >
                     <uicorner CornerRadius={() => new UDim(0, px(15))} />
+                </textbutton>
+            </frame>
+        );
+    }
+}
+```
+
+### Reactive Counter with Custom Properties
+
+```ts
+import { App, Args, MendArgs } from "@rbxts/forge";
+import { source } from "@rbxts/vide";
+
+type CounterProps = {
+    count: Vide.Source<number>;
+};
+
+@App({ name: "Counter", group: "UI" })
+export default class Counter extends Args implements MendArgs<CounterProps> {
+    public count = source(0);
+    
+    render(): AppForge.Node {
+        const { px } = this.props;
+        
+        return (
+            <frame 
+                BackgroundColor3={Color3.fromRGB(40, 40, 40)}
+                Size={UDim2.fromOffset(px(300), px(100))}
+                Position={UDim2.fromScale(0.5, 0.5)}
+                AnchorPoint={new Vector2(0.5, 0.5)}
+            >
+                <uicorner CornerRadius={new UDim(0, px(12))} />
+                <textlabel
+                    Text={() => `Count: ${this.count()}`}
+                    Size={UDim2.fromScale(1, 0.5)}
+                    BackgroundTransparency={1}
+                    TextColor3={Color3.fromRGB(255, 255, 255)}
+                    TextSize={px(20)}
+                />
+                <textbutton
+                    Text="Increment"
+                    Size={UDim2.fromScale(1, 0.5)}
+                    Position={UDim2.fromScale(0, 0.5)}
+                    BackgroundColor3={Color3.fromRGB(60, 60, 60)}
+                    TextColor3={Color3.fromRGB(255, 255, 255)}
+                    TextSize={px(16)}
+                    Event={{
+                        Activated: () => this.count(this.count() + 1),
+                    }}
+                >
+                    <uicorner CornerRadius={new UDim(0, px(12))} />
                 </textbutton>
             </frame>
         );
@@ -623,7 +770,8 @@ export default class Tooltip extends ChildArgs {
 - App `name + group` combinations must be **globally unique** — Forge throws a runtime error on duplicates.
 - Sources are only created for apps that are actually rendered — unrendered apps have no source and no rule effects.
 - `Flamework.addPaths()` must be a string literal in your project — it cannot be inside the package or passed as a variable.
-- Use `AppContext` with `useForgeContext()` for root apps, and `ChildAppContext` with `useChildForgeContext()` for child apps — mixing them will throw a runtime error.
+- Use `AppContext` with `useAppContext()` for root apps, and `ChildAppContext` with `useChildAppContext()` for child apps — mixing them will throw a runtime error.
+- Use `MendArgs<T>` to add type-safe custom properties to your apps that are accessible via `useAppContext<T>()`.
 - A test folder is available in the repository for reference implementations.
 
 ---

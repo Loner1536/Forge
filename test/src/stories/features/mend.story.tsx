@@ -29,6 +29,7 @@ const story = CreateVideStory(
 			callback={(_, forge) => {
 				forge.bind("Mend", "Feature", props.controls.visible);
 			}}
+			debug
 		/>
 	),
 );
