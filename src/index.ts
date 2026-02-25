@@ -14,4 +14,6 @@ export { default as useChildAppContext } from "@hooks/useChildAppContext";
 export { default as useAppContext } from "@hooks/useAppContext";
 export { AppContext, ChildAppContext } from "@root/contexts";
 
+export { px } from "@hooks/usePx";
+
 export default AppForge;

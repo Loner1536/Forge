@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.2]
+
+### Added
+- Added a px export for use outside of @App/@AppChild but still used inside a scope AND after Forge
+
 ## [0.4.1]
 
 ### Added
