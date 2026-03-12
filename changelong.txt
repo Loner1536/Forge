@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.4.4]
+
+### Updated
+- added a Forge.get(name: AppNames, group: GroupNames = "None")
+
+## [0.4.3]
+
+### Updated
+- updated Vide to 0.6.1
+
 ## [0.4.2]
 
 ### Added
@@ -7,7 +17,7 @@
 
 ## [0.4.1]
 
-### Added
+### Fixed
 - Fixed an issue with global.d.ts not routing to the correct types.d.ts
 
 ---

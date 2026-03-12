@@ -9,6 +9,7 @@ import Renders from "@root/renders";
 
 // Helpers
 import getAppSource from "@helpers/getAppSource";
+import { AppRegistry } from "@registries/apps";
 
 export class AppForge extends Renders {
 	constructor() {
@@ -35,6 +36,9 @@ export class AppForge extends Renders {
 		src(value);
 	}
 
+	public get(name: AppNames, group: AppGroups = "None") {
+		return AppRegistry.get(name)?.get(group);
+	}
 	public open(name: AppNames, group: AppGroups = "None") {
 		this.set(name, group, true);
 	}
