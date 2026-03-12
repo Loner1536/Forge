@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.5]
+
+### Updated
+- fixed some issues with compiling
+- fixed vide dependency
+
 ## [0.4.4]
 
 ### Updated
@@ -13,12 +19,12 @@
 ## [0.4.2]
 
 ### Added
-- Added a px export for use outside of @App/@AppChild but still used inside a scope AND after Forge
+- added a px export for use outside of @App/@AppChild but still used inside a scope AND after Forge
 
 ## [0.4.1]
 
 ### Fixed
-- Fixed an issue with global.d.ts not routing to the correct types.d.ts
+- fixed an issue with global.d.ts not routing to the correct types.d.ts
 
 ---
 

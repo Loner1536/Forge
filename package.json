@@ -36,12 +36,12 @@
 		"@rbxts/set-timeout": "^1.1.2",
 		"concurrently": "^9.2.1",
 		"@rbxts/vide": "*",
-		"turbo": "^2.8.10"
+		"turbo": "^2.8.16"
 	},
 	"devDependencies": {
 		"@rbxts/compiler-types": "3.0.0-types.0",
-		"@biomejs/biome": "^2.3.7",
-		"@rbxts/types": "^1.0.891",
+		"@biomejs/biome": "^2.4.6",
+		"@rbxts/types": "^1.0.911",
 		"roblox-ts": "3.0.0",
 		"typescript": "^5.9.3"
 	}
